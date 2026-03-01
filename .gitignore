@@ -1,0 +1,9 @@
+node_modules/
+.env
+/uploads/
+/backend/uploads/
+/build/
+/dist/
+.DS_Store
+npm-debug.log
+yarn-error.log
