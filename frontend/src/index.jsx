@@ -163,7 +163,7 @@ const REVIEWS = [{
 }, {
   name: "Suresh K.",
   city: "Hyderabad",
-  text: "Very authentic Sivakasi crackers. The 120 Shot function box was mind-blowing! Highly recommended!",
+  text: "Very authentic Sri Ram Ballaji Agency. The 120 Shot function box was mind-blowing! Highly recommended!",
   rating: 5
 }];
 const COMBOS = [{
@@ -463,7 +463,9 @@ function HomePage({
       ...sectionStyle,
       background: "rgba(255,50,0,0.05)",
       borderRadius: 20,
-      margin: "0 20px 60px"
+      margin: "0 20px 60px",
+      width: "100%",
+      maxWidth: "unset !important"
     }}>
       <SectionTitle icon="⚠️" title="Safety Instructions" sub="Always follow these guidelines before using crackers" />
       <div className="idx-style-70">
@@ -1368,9 +1370,6 @@ function Navbar({
         <span className="idx-style-244">🪔</span>
         <div className="idx-style-245">
           <div className="idx-style-246">Sri Ram Balaji Agency</div>
-          <div className="idx-style-247">
-            SRIVILLIPUTTUR • EST. PRICE LIST 2025
-          </div>
         </div>
       </div>
       <div className="idx-style-248">
@@ -1572,8 +1571,8 @@ export default function ShopApp() {
         </div>
         <div className="idx-style-264">
           <span>
-            © 2025 Sri Ram Balaji Agency, Srivilliputtur. Managed by Sri
-            Gopalsamy. All rights reserved.
+            © 2026 Sri Ram Balaji Agency, Srivilliputtur.&nbsp;|&nbsp; All rights reserved.
+            <br /> Managed by Balaji G (6383783573).
           </span>
           <span>🔒 SSL Secured &nbsp;|&nbsp; PESO Licensed Products</span>
         </div>

@@ -119,7 +119,7 @@ function AdminLogin({ onLogin }) {
         <div className="adm-style-4">
           <div className="adm-style-5">🔐</div>
           <h1 className="adm-style-6">Admin Portal</h1>
-          <p className="adm-style-7">Sivakasi Crackers Management</p>
+          <p className="adm-style-7">Sri Ram Ballaji Agency Management</p>
         </div>
 
         <div className="adm-style-8">
@@ -165,7 +165,7 @@ function AdminLogin({ onLogin }) {
         </button>
 
         <p className="adm-style-16">
-          Protected by JWT Authentication &nbsp;|&nbsp; Sivakasi Crackers
+          Protected by JWT Authentication &nbsp;|&nbsp; Sri Ram Ballaji Agency
         </p>
       </div>
     </div>

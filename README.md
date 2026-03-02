@@ -1,4 +1,4 @@
-# 🎆 Sivakasi Crackers - Complete E-Commerce Platform
+# 🎆 Sri Ram Ballaji Agency - Complete E-Commerce Platform
 
 ## Project Structure
 
