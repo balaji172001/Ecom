@@ -1423,7 +1423,7 @@ export default function ShopApp() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/products?limit=200");
+        const res = await fetch(`${API_BASE}/api/products?limit=200`);
         if (res.ok) {
           const data = await res.json();
           const raw = data.products || data || [];

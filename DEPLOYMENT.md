@@ -73,6 +73,21 @@ If you prefer to deploy manually:
 
 ---
 
+## 🔐 How to Deploy Admin (Owner Portal)
+Since the Admin is a separate build for security, follow these steps to deploy it on Vercel:
+
+1.  **Create a New Project** in Vercel.
+2.  Import your `Ecom` repository again.
+3.  **Project Settings**:
+    - **Root Directory**: `frontend`
+    - **Build Command**: `npm run build:admin`
+    - **Output Directory**: `build-admin`
+4.  **Environment Variables**:
+    - Add `REACT_APP_API_URL`: `https://your-backend.onrender.com`
+5.  **Deploy**: This will give you a private URL just for your admin panel.
+
+---
+
 ### Build Commands (if you change code)
 If you make changes and need to rebuild:
 ```bash
