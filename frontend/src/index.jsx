@@ -346,6 +346,7 @@ function ProductCard({
 // HOME PAGE
 // ============================================================
 function HomePage({
+  products,
   onNavigate,
   onAddToCart
   , products }) {
@@ -386,7 +387,7 @@ function HomePage({
         </button>
       </div>
       <div className="idx-style-53">
-        {[["75+", "Products"], ["50%", "Max Discount"], ["2025", "Price List"], ["Licensed", "& Certified"]].map(([n, l]) => <div key={l} className="idx-style-54">
+        {[[`${products.length}+`, "Products"], ["50%", "Max Discount"], ["2025", "Price List"], ["Licensed", "& Certified"]].map(([n, l]) => <div key={l} className="idx-style-54">
           <div className="idx-style-55">{n}</div>
           <div className="idx-style-56">{l}</div>
         </div>)}
@@ -768,23 +769,30 @@ function CartPage({
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState("");
-  const COUPONS = {
-    BALAJI20: 20,
-    DIWALI15: 15,
-    FIRST10: 10,
-    FEST50: 50
-  };
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = subtotal >= 999 ? 0 : 99;
   const discAmt = Math.round(subtotal * discount / 100);
   const total = subtotal + delivery - discAmt;
-  const applyCoupon = () => {
-    const code = coupon.toUpperCase().trim();
-    if (COUPONS[code]) {
-      setDiscount(COUPONS[code]);
-      setCouponMsg(`✅ ${COUPONS[code]}% discount applied!`);
-    } else {
-      setCouponMsg("❌ Invalid coupon code");
+
+  const applyCoupon = async () => {
+    if (!coupon.trim()) return;
+    try {
+      setCouponMsg("⌛ Validating...");
+      const res = await fetch(`${API_BASE}/api/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: coupon, subtotal })
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setDiscount(data.value); // Backend returns the % or flat value
+        setCouponMsg(`✅ Coupon applied: ${data.value}${data.type === "percent" ? "%" : " flat"} off!`);
+      } else {
+        setCouponMsg(`❌ ${data.error || "Invalid coupon"}`);
+        setDiscount(0);
+      }
+    } catch (err) {
+      setCouponMsg("❌ Connection error");
       setDiscount(0);
     }
   };
@@ -1551,7 +1559,7 @@ export default function ShopApp() {
           </div>
           <div>
             <div className="idx-style-260">Quick Links</div>
-            {[["home", "Home"], ["products", "All Products (75+)"], ["cart", "My Cart"], ["orders", "Order History"]].map(([p, l]) => <div key={p} onClick={() => onNavigate(p)} className="idx-style-261">
+            {[["home", "Home"], ["products", `All Products (${products.length}+)`], ["cart", "My Cart"], ["orders", "Order History"]].map(([p, l]) => <div key={p} onClick={() => onNavigate(p)} className="idx-style-261">
               → {l}
             </div>)}
           </div>

@@ -2,6 +2,21 @@
 
 This project is now split into three separate parts for maximum security and performance.
 
+## 🚨 IF UPDATES ARE NOT SHOWING (FIX)
+If you update in Admin but the Shop doesn't change, it means your **Environment Variables** are missing in Vercel.
+
+**Do this for BOTH the Shop and Admin projects in Vercel:**
+1.  Go to your **Vercel Dashboard**.
+2.  Click on your **Project > Settings > Environment Variables**.
+3.  Add this variable:
+    - **Key**: `REACT_APP_API_URL`
+    - **Value**: `https://ecom-rne9.onrender.com`
+4.  Go to the **Deployments** tab and click **"Redeploy"** on the latest build.
+
+*Once you do this, the Admin will correctly talk to your backend instead of "localhost".*
+
+---
+
 ## ⚡ ONE-CLICK DEPLOY
 Run this single command to build both Shop and Admin apps automatically:
 ```bash

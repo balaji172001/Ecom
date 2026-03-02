@@ -308,7 +308,7 @@ app.delete("/api/admin/products/:id", adminAuth, async (req, res) => {
 // ============================================================
 // COUPON ROUTES
 // ============================================================
-app.post("/api/coupons/validate", auth, async (req, res) => {
+app.post("/api/coupons/validate", async (req, res) => {
   try {
     const { code, subtotal } = req.body;
     const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
