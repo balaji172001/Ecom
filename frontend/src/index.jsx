@@ -349,7 +349,7 @@ function HomePage({
   products,
   onNavigate,
   onAddToCart
-  , products }) {
+}) {
   const [rev, setRev] = useState(0);
   const featured = products.filter(p => p.stock > 0).slice(0, 8);
   useEffect(() => {
