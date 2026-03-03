@@ -2,7 +2,7 @@ import "./admin.css";
 import { useState, useEffect } from "react";
 
 // API base — when running frontend in CRA (port 3000) and backend on 5003
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5001";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5003";
 
 // ============================================================
 // STATUS COLORS
@@ -50,7 +50,7 @@ function AdminLogin({ onLogin }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/login-admin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,6 +182,7 @@ function Sidebar({ active, onNav, collapsed, onToggle }) {
     ["products", "🛍️", "Products"],
     ["coupons", "🏷️", "Coupons"],
     ["banners", "🖼️", "Banners"],
+    ["users", "👥", "Users"],
   ];
   return (
     <aside
@@ -1234,215 +1235,61 @@ function CouponsPage({ coupons, setCoupons }) {
 // ============================================================
 // BANNERS
 // ============================================================
-function BannersPage({ banners, setBanners }) {
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    subtitle: "",
-    emoji: "🎆",
-    type: "sale",
-  });
-  const add = async () => {
-    if (!form.title) return;
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/banners`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setBanners((prev) => [saved, ...prev]);
-        setShowForm(false);
-        setForm({
-          title: "",
-          subtitle: "",
-          emoji: "🎆",
-          type: "sale",
-        });
-      }
-    } catch (e) {
-      console.error("Add banner failed", e);
-    }
-  };
-  const toggle = (id) => {
-    // Backend doesn't have a direct toggle yet, but we can implement it as a local toggle if needed
-    // or just leave as is since we mainly care about persistence from actions.
-    setBanners((prev) =>
-      prev.map((b) =>
-        (b._id || b.id) === id
-          ? {
-            ...b,
-            isActive: !b.isActive,
-          }
-          : b,
-      ),
-    );
-  };
-  const remove = async (id) => {
-    if (!confirm("Delete this banner?")) return;
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/banners/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        setBanners((prev) => prev.filter((b) => (b._id || b.id) !== id));
-      }
-    } catch (e) {
-      console.error("Remove banner failed", e);
-    }
-  };
+function UsersPage({ users }) {
+  const [search, setSearch] = useState("");
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.mobile.includes(search)
+  );
+
   return (
     <div>
-      <div className="adm-style-86">
-        <h1 style={pageTitle}>Banner Management</h1>
-        <button onClick={() => setShowForm((s) => !s)} style={actionBtn}>
-          + Add Banner
-        </button>
+      <h1 style={pageTitle}>User Management</h1>
+      <div className="adm-style-40" style={{ marginTop: 20 }}>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="🔍 Search users by name or mobile..."
+          style={{ ...inputStyle, flex: 1 }}
+        />
       </div>
 
-      {showForm && (
-        <div
-          style={{
-            ...cardStyle,
-            marginBottom: 24,
-            border: "1px solid rgba(255,215,0,0.3)",
-          }}
-        >
-          <h3 className="adm-style-87">New Banner</h3>
-          <div className="adm-style-88">
-            <div>
-              <label style={labelStyle}>Title</label>
-              <input
-                value={form.title}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    title: e.target.value,
-                  }))
-                }
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Subtitle</label>
-              <input
-                value={form.subtitle}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    subtitle: e.target.value,
-                  }))
-                }
-                style={inputStyle}
-              />
-            </div>
-            <div className="adm-style-89">
-              <div className="adm-style-90">
-                <label style={labelStyle}>Type</label>
-                <select
-                  value={form.type}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      type: e.target.value,
-                    }))
-                  }
-                  style={selectStyle}
-                >
-                  {["sale", "delivery", "event", "info"].map((t) => (
-                    <option key={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="adm-style-91">
-                <label style={labelStyle}>Emoji</label>
-                <input
-                  value={form.emoji}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      emoji: e.target.value,
-                    }))
-                  }
-                  style={inputStyle}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="adm-style-92">
-            <button onClick={add} style={actionBtn}>
-              Add Banner
-            </button>
-            <button
-              onClick={() => setShowForm(false)}
-              style={{
-                ...actionBtn,
-                background: "rgba(255,255,255,0.08)",
-                color: "#aaa",
-              }}
-            >
-              Cancel
-            </button>
-          </div>
+      <div className="adm-style-42">
+        <div style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", color: "#fff" }}>
+            <thead style={{ background: "rgba(255,215,0,0.1)", textAlign: "left" }}>
+              <tr>
+                <th style={{ padding: "12px 15px", fontSize: "0.8rem" }}>NAME</th>
+                <th style={{ padding: "12px 15px", fontSize: "0.8rem" }}>MOBILE</th>
+                <th style={{ padding: "12px 15px", fontSize: "0.8rem" }}>SAVED ADDRESS</th>
+                <th style={{ padding: "12px 15px", fontSize: "0.8rem" }}>JOINED</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(u => (
+                <tr key={u._id} style={{ borderBottom: "1px solid rgba(255,215,0,0.05)" }}>
+                  <td style={{ padding: "12px 15px", fontSize: "0.85rem", fontWeight: 600 }}>{u.name}</td>
+                  <td style={{ padding: "12px 15px", fontSize: "0.85rem", color: "#FFD700" }}>{u.mobile}</td>
+                  <td style={{ padding: "12px 15px", fontSize: "0.8rem", color: "#aaa" }}>
+                    {u.address ? (
+                      <div>
+                        {u.address}, {u.city}<br />
+                        {u.state} - {u.pincode}
+                      </div>
+                    ) : (
+                      <span style={{ fontStyle: "italic", opacity: 0.5 }}>No address saved</span>
+                    )}
+                  </td>
+                  <td style={{ padding: "12px 15px", fontSize: "0.8rem", color: "#888" }}>
+                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      <div className="adm-style-93">
-        {banners.map((b) => (
-          <div
-            key={b.id}
-            style={{
-              ...cardStyle,
-              background:
-                "linear-gradient(135deg, rgba(30,10,0,0.9), rgba(60,20,0,0.7))",
-              border: "1px solid rgba(255,100,0,0.2)",
-            }}
-          >
-            <div className="adm-style-94">
-              <span className="adm-style-95">{b.emoji}</span>
-              <div className="adm-style-96">
-                <div className="adm-style-97">{b.title}</div>
-                <div className="adm-style-98">{b.subtitle}</div>
-                <span className="adm-style-99">{b.type}</span>
-              </div>
-              <div className="adm-style-100">
-                <button
-                  onClick={() => toggle(b._id || b.id)}
-                  style={{
-                    background: b.isActive
-                      ? "rgba(76,175,80,0.15)"
-                      : "rgba(158,158,158,0.1)",
-                    border: `1px solid ${b.isActive ? "rgba(76,175,80,0.4)" : "rgba(158,158,158,0.3)"}`,
-                    color: b.isActive ? "#4CAF50" : "#9E9E9E",
-                    borderRadius: 8,
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    fontSize: "0.78rem",
-                    fontFamily: "'Cinzel', serif",
-                  }}
-                >
-                  {b.isActive ? "● Active" : "○ Inactive"}
-                </button>
-                <button
-                  onClick={() => remove(b._id || b.id)}
-                  className="adm-style-101"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
+      {filtered.length === 0 && <EmptyState icon="👥" msg="No users found" />}
     </div>
   );
 }
@@ -1538,6 +1385,7 @@ export default function AdminApp() {
   const [orders, setOrders] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [users, setUsers] = useState([]);
 
   // On mount or when loggedIn toggles, check for token and load data
   useEffect(() => {
@@ -1633,7 +1481,16 @@ export default function AdminApp() {
           if (mounted) setCoupons(cjson || []);
         }
 
-
+        // fetch users (admin)
+        const userRes = await fetch(`${API_BASE}/api/admin/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (userRes.ok) {
+          const ujson = await userRes.json();
+          if (mounted) setUsers(ujson || []);
+        }
         // if everything good, mark logged in
         setLoggedIn(true);
       } catch (err) {
@@ -1709,6 +1566,9 @@ export default function AdminApp() {
           )}
           {page === "banners" && (
             <BannersPage banners={banners} setBanners={setBanners} />
+          )}
+          {page === "users" && (
+            <UsersPage users={users} />
           )}
         </main>
       </div>

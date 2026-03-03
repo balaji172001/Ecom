@@ -42,10 +42,14 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/sivakasic
 // User Schema
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true },
-  mobile: { type: String, required: true },
-  password: { type: String, required: true },
+  email: { type: String, sparse: true, lowercase: true },
+  mobile: { type: String, index: { unique: true, sparse: true } },
+  password: { type: String },
   role: { type: String, enum: ["user", "admin"], default: "user" },
+  address: { type: String, trim: true },
+  city: { type: String, trim: true },
+  state: { type: String, trim: true },
+  pincode: { type: String, trim: true },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });
@@ -206,34 +210,55 @@ const upload = multer({
 // ============================================================
 app.post("/api/auth/register", async (req, res) => {
   try {
-    const { name, email, mobile, password } = req.body;
-    if (!name || !email || !mobile || !password)
-      return res.status(400).json({ error: "All fields required" });
+    let { name, email, mobile } = req.body;
+    if (!name || !mobile)
+      return res.status(400).json({ error: "Name and Mobile number are required for registration" });
 
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ error: "User already exists" });
+    // Clean empty strings for optional fields to avoid unique constraint clash
+    if (email === "") email = undefined;
 
-    const hashedPw = await bcrypt.hash(password, 12);
-    const user = await User.create({ name, email, mobile, password: hashedPw });
+    // Check if user exists by mobile
+    const mobileExists = await User.findOne({ mobile });
+    if (mobileExists) return res.status(400).json({ error: "Mobile number already registered. Please login." });
+
+    // Check if email exists (if provided)
+    if (email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) return res.status(400).json({ error: "Email address already registered. Please login or use another email." });
+    }
+
+    const user = await User.create({ name, email, mobile });
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, user: { id: user._id, name, email, mobile, role: user.role } });
+    res.json({ token, user: { id: user._id, name, email: user.email, mobile, role: user.role } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login-shop", async (req, res) => {
+  try {
+    const { mobile } = req.body;
+    if (!mobile) return res.status(400).json({ error: "Mobile number is required" });
+    const user = await User.findOne({ mobile });
+    if (!user) return res.status(400).json({ error: "User not found" });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/auth/login-admin", async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(400).json({ error: "Invalid credentials" });
-
+    if (!user || user.role !== "admin") return res.status(400).json({ error: "Invalid admin credentials" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ error: "Invalid admin credentials" });
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, user: { id: user._id, name: user.name, email, mobile: user.mobile, role: user.role } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -401,9 +426,13 @@ app.post("/api/payment/verify", auth, async (req, res) => {
       await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.qty, salesCount: it.qty } });
     }
 
-    // send notifications (email/whatsapp) - non-blocking
-    sendEmail(order.customer.email, "Order Confirmed", `<p>Your order ${order.orderId} is confirmed.</p>`).catch(() => { });
-    sendWhatsApp(order.customer.mobile, `Your order ${order.orderId} is confirmed.`).catch(() => { });
+    // update user address
+    await User.findByIdAndUpdate(req.user.id, {
+      address: orderData.customer.address,
+      city: orderData.customer.city,
+      state: orderData.customer.state,
+      pincode: orderData.customer.pincode
+    }).catch(() => { });
 
     res.json({ success: true, orderId: order.orderId });
   } catch (err) {

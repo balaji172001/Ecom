@@ -142,7 +142,7 @@ function FireworksCanvas() {
 // (All 76 products, names & prices exactly from the PDF)
 // ============================================================
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5003";
 
 const CATEGORIES = ["All", "Flash Light Crackers", "Deluxe Crackers", "Garalands", "Bijili Crackers", "Ground Chakkar", "Flower Pots", "Multi Colour Flower Pots", "Twinkling Star", "Bombs", "Candles", "Novelties", "Rockets", "Special Fountains", "Sparkless", "Fancy Items", "Fountain", "Aerial Fancy", "Repeating Multi Colour Function Shots"];
 const REVIEWS = [{
@@ -643,7 +643,7 @@ function ProductDetailPage({
   const [qty, setQty] = useState(1);
   const [imgIdx, setImgIdx] = useState(0);
 
-    // Inject Product JSON-LD schema for SEO rich results
+  // Inject Product JSON-LD schema for SEO rich results
   useEffect(() => {
     if (!p) return;
     const schema = {
@@ -960,26 +960,40 @@ function CartPage({
 // ============================================================
 // CHECKOUT PAGE
 // ============================================================
-function CheckoutPage({
-  cart,
-  onPlaceOrder,
-  onNavigate
-}) {
+function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
+  const [useSaved, setUseSaved] = useState(!!user?.address);
   const [form, setForm] = useState({
-    name: "",
-    mobile: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "Tamil Nadu",
-    pincode: ""
-    });
-  const [method, setMethod] = useState("upi");
+    name: user?.name || "",
+    mobile: user?.mobile || "",
+    email: user?.email || "",
+    address: user?.address || "",
+    city: user?.city || "",
+    state: user?.state || "Tamil Nadu",
+    pincode: user?.pincode || ""
+  });
+  const [method, setMethod] = useState("gpay");
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = subtotal >= 999 ? 0 : 99;
   const total = subtotal + delivery;
+
+  // Update form if user data changes (e.g. initial profile load)
+  useEffect(() => {
+    if (user && useSaved) {
+      setForm(p => ({
+        ...p,
+        name: user.name || p.name,
+        mobile: user.mobile || p.mobile,
+        email: user.email || p.email,
+        address: user.address || p.address,
+        city: user.city || p.city,
+        state: user.state || p.state,
+        pincode: user.pincode || p.pincode
+      }));
+    }
+  }, [user, useSaved]);
+
   const validate = () => {
     const e = {};
     if (!form.name.trim()) e.name = "Name required";
@@ -990,19 +1004,32 @@ function CheckoutPage({
     setErrors(e);
     return Object.keys(e).length === 0;
   };
+  const WHATSAPP_NUMBER = "919940767763"; // GPay & WhatsApp number
   const handlePayment = () => {
     if (!validate()) return;
-    if (method === "upi") {
-      alert("Payment verified. Redirecting to success screen.");
-    }
     const orderId = "SRBA" + Date.now().toString().slice(-8).toUpperCase();
-    onPlaceOrder({
-      ...form,
-      method,
-      total,
-      orderId,
-      items: cart
-    });
+    // Build WhatsApp message with full order details
+    const itemsList = cart.map(i => `  • ${i.name} × ${i.qty} = ₹${(i.price * i.qty).toLocaleString("en-IN")}`).join("\n");
+    const paymentLabel = method === "gpay" ? `GPay to 9940767763 — ₹${total.toLocaleString("en-IN")} (Please pay before delivery)` : `Cash on Delivery — ₹${total.toLocaleString("en-IN")}`;
+    const msg = encodeURIComponent(
+      `🎆 *New Order — Sri Ram Balaji Agency*\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*Order ID:* ${orderId}\n` +
+      `*Name:* ${form.name}\n` +
+      `*Mobile:* ${form.mobile}\n` +
+      `*Address:* ${form.address}, ${form.city}, ${form.state} — ${form.pincode}\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*Items:*\n${itemsList}\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `*Delivery:* ${delivery === 0 ? "FREE" : "₹" + delivery}\n` +
+      `*Total:* ₹${total.toLocaleString("en-IN")}\n` +
+      `*Payment:* ${paymentLabel}\n` +
+      `━━━━━━━━━━━━━━━━━━\n` +
+      `Thank you! 🙏`
+    );
+    onPlaceOrder({ ...form, method, total, orderId, items: cart });
+    // Open WhatsApp with order details
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
     onNavigate("success", orderId);
   };
 
@@ -1053,9 +1080,40 @@ function CheckoutPage({
       <div>
         {step === 1 && <div style={cardStyle}>
           <h3 className="idx-style-167">User Details</h3>
+          {user?.address && <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+            padding: "12px 15px",
+            background: "rgba(255,215,0,0.05)",
+            border: "1px solid rgba(255,215,0,0.2)",
+            borderRadius: 12,
+            cursor: "pointer"
+          }} onClick={() => setUseSaved(!useSaved)}>
+            <div style={{
+              width: 18,
+              height: 18,
+              borderRadius: 4,
+              border: "2px solid #FFD700",
+              background: useSaved ? "#FFD700" : "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#000",
+              fontSize: "0.7rem",
+              fontWeight: 900
+            }}>
+              {useSaved && "✓"}
+            </div>
+            <span style={{ fontSize: "0.85rem", color: "#FFD700", fontWeight: 600 }}>Use Saved Delivery Details</span>
+          </div>}
+
           <div className="idx-style-168">
-            {[["name", "Full Name", "text"], ["mobile", "Mobile Number", "tel"], ["email", "Email Address", "email"], ["address", "Full Address", "text"], ["city", "City", "text"], ["pincode", "Pincode", "text"]].map(([f, l, t]) => <div key={f} style={{
-              gridColumn: f === "address" ? "1/-1" : "auto"
+            {[["name", "Full Name", "text"], ["mobile", "Mobile Number", "tel"], ["email", "Email Address (Optional)", "email"], ["address", "Full Address", "text"], ["city", "City", "text"], ["pincode", "Pincode", "text"]].map(([f, l, t]) => <div key={f} style={{
+              gridColumn: f === "address" ? "1/-1" : "auto",
+              opacity: useSaved ? 0.6 : 1,
+              pointerEvents: useSaved ? "none" : "auto"
             }}>
               <label className="idx-style-169">{l}</label>
               <input type={t} value={form[f]} onChange={e => setForm(p => ({
@@ -1067,7 +1125,10 @@ function CheckoutPage({
               }} />
               {errors[f] && <div className="idx-style-170">{errors[f]}</div>}
             </div>)}
-            <div className="idx-style-171">
+            <div className="idx-style-171" style={{
+              opacity: useSaved ? 0.6 : 1,
+              pointerEvents: useSaved ? "none" : "auto"
+            }}>
               <label className="idx-style-172">State</label>
               <select value={form.state} onChange={e => setForm(p => ({
                 ...p,
@@ -1076,7 +1137,6 @@ function CheckoutPage({
                 {["Tamil Nadu", "Kerala", "Karnataka", "Andhra Pradesh", "Telangana", "Maharashtra", "Gujarat", "Rajasthan", "Delhi", "West Bengal"].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
-
           </div>
           <button onClick={() => validate() && setStep(2)} style={{
             ...btnStyle("primary"),
@@ -1090,7 +1150,7 @@ function CheckoutPage({
 
         {step === 2 && <div style={cardStyle}>
           <h3 className="idx-style-177">Payment Method</h3>
-          {[["upi", "📱 UPI / QR Code", "Scan & Pay instantly"], ["cod", "💵 Cash on Delivery", "Pay when your order arrives"]].map(([val, label, sub]) => <div key={val} onClick={() => setMethod(val)} style={{
+          {[["gpay", "📱 GPay", "Pay online via Google Pay"]].map(([val, label, sub]) => <div key={val} onClick={() => setMethod(val)} style={{
             display: "flex",
             alignItems: "flex-start",
             gap: 14,
@@ -1118,17 +1178,10 @@ function CheckoutPage({
             <div>
               <div className="idx-style-179">{label}</div>
               <div className="idx-style-180">{sub}</div>
-              {val === "upi" && method === "upi" && <div style={{
-                marginTop: 12
-              }}>
-                <QRCodeSVG value={`upi://pay?pa=merchant@upi&pn=Sri%20Ram%20Balaji%20Agency&am=${total}&cu=INR`} size={150} level={"L"} includeMargin={true} />
-                <div style={{
-                  fontSize: "0.8rem",
-                  color: "#ffd700",
-                  marginTop: 8
-                }}>
-                  Scan with GPay, PhonePe, or Paytm
-                </div>
+              {val === "gpay" && method === "gpay" && <div style={{ marginTop: 12, padding: "12px 16px", background: "rgba(255,215,0,0.07)", borderRadius: 10, border: "1px solid rgba(255,215,0,0.2)" }}>
+                <div style={{ fontSize: "1rem", color: "#FFD700", fontWeight: 700, marginBottom: 4 }}>📲 GPay Number</div>
+                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>9940767763</div>
+                <div style={{ fontSize: "0.78rem", color: "#aaa", marginTop: 6 }}>Send ₹{total.toLocaleString("en-IN")} to this number on GPay — screenshot will be collected via WhatsApp</div>
               </div>}
             </div>
           </div>)}
@@ -1150,7 +1203,7 @@ function CheckoutPage({
               padding: "12px",
               fontSize: "0.86rem"
             }}>
-              {method === "upi" ? `I have paid ₹${total.toLocaleString("en-IN")}` : `📦 COD Order — ₹${total.toLocaleString("en-IN")}`}
+              {method === "gpay" ? `✅ I've Paid on GPay — Send Order on WhatsApp` : `📦 Place COD Order — Send via WhatsApp`}
             </button>
           </div>
         </div>}
@@ -1209,11 +1262,11 @@ function OrderSuccessPage({
       <div className="idx-style-198">Order ID</div>
       <div className="idx-style-199">{orderId}</div>
       <div className="idx-style-200">
-        WhatsApp & Email confirmation will be sent shortly
+        Your order details have been sent to WhatsApp ✅
       </div>
     </div>
     <div className="idx-style-201">
-      {[["📱", "WhatsApp Update", "Confirmation sent"], ["📧", "Email Sent", "Invoice to your email"], ["🚚", "3–5 Days", "Estimated delivery"], ["🔍", "Track Order", "Use your Order ID"]].map(([e, t, d]) => <div key={t} className="idx-style-202">
+      {[["✅", "Order Confirmed", "Details sent on WhatsApp"], ["🚚", "3–5 Days", "Estimated delivery"], ["📱", "Payment", "Secure GPay payment"]].map(([e, t, d]) => <div key={t} className="idx-style-202">
         <div className="idx-style-203">{e}</div>
         <div className="idx-style-204">{t}</div>
         <div className="idx-style-205">{d}</div>
@@ -1223,90 +1276,71 @@ function OrderSuccessPage({
       <button onClick={() => onNavigate("home")} style={btnStyle("primary")}>
         🏠 Back to Home
       </button>
-      <button onClick={() => onNavigate("orders")} style={btnStyle("outline")}>
-        📦 My Orders
+      <button onClick={() => window.open("https://wa.me/919940767763", "_blank")} style={btnStyle("outline")}>
+        📱 Chat on WhatsApp
       </button>
     </div>
   </div>;
 }
 
-// ============================================================
-// FULL LOGIN PAGE (for /login route)
-// ============================================================
-function LoginPage({ }) {
+function LoginPage({ onLogin, showToast }) {
   const [isReg, setIsReg] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    mobile: "",
-    password: ""
-  });
+  const [form, setForm] = useState({ name: "", mobile: "", email: "" });
   const [loading, setLoading] = useState(false);
+
   const submit = async () => {
+    if (isReg && !form.name.trim()) return showToast("Name is required");
+    if (!form.mobile.trim()) return showToast("Mobile number is required");
+    if (!/^[6-9]\d{9}$/.test(form.mobile)) return showToast("Enter a valid 10-digit mobile number");
+
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    onLogin({
-      name: form.name || form.email.split("@")[0],
-      email: form.email,
-      mobile: form.mobile
-    });
-    setLoading(false);
+    try {
+      const endpoint = isReg ? "/api/auth/register" : "/api/auth/login-shop";
+      const payload = isReg ? { ...form } : { mobile: form.mobile };
+      if (isReg && !payload.email) delete payload.email;
+
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || (isReg ? "Registration failed" : "Login failed"));
+
+      onLogin(data.user, data.token);
+      showToast(isReg ? "Account created successfully!" : "Logged in successfully!");
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
   return <div className="idx-style-207">
-    <div style={{
-      ...cardStyle,
-      maxWidth: 400,
-      width: "100%",
-      border: "1px solid rgba(255,215,0,0.28)"
-    }}>
+    <div style={{ ...cardStyle, maxWidth: 400, width: "100%", border: "1px solid rgba(255,215,0,0.28)" }}>
       <div className="idx-style-208">
         <div className="idx-style-209">🪔</div>
-        <h2 className="idx-style-210">
-          {isReg ? "Create Account" : "Welcome Back"}
-        </h2>
+        <h2 className="idx-style-210">{isReg ? "Create Account" : "Welcome Back"}</h2>
         <p className="idx-style-211">Sri Ram Balaji Agency</p>
       </div>
       {isReg && <div className="idx-style-212">
         <label className="idx-style-213">Full Name</label>
-        <input value={form.name} onChange={e => setForm(f => ({
-          ...f,
-          name: e.target.value
-        }))} placeholder="Your name" style={inputStyle} />
+        <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Your name" style={inputStyle} />
       </div>}
       <div className="idx-style-214">
-        <label className="idx-style-215">Email</label>
-        <input type="email" value={form.email} onChange={e => setForm(f => ({
-          ...f,
-          email: e.target.value
-        }))} placeholder="you@example.com" style={inputStyle} />
+        <label className="idx-style-215">Mobile Number</label>
+        <input type="tel" value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: e.target.value }))} placeholder="Enter your 10-digit mobile" style={inputStyle} />
       </div>
-      {isReg && <div className="idx-style-216">
-        <label className="idx-style-217">Mobile</label>
-        <input type="tel" value={form.mobile} onChange={e => setForm(f => ({
-          ...f,
-          mobile: e.target.value
-        }))} placeholder="10-digit mobile" style={inputStyle} />
+      {isReg && <div className="idx-style-212">
+        <label className="idx-style-213">Email (Optional)</label>
+        <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@example.com" style={inputStyle} />
       </div>}
-      <div className="idx-style-218">
-        <label className="idx-style-219">Password</label>
-        <input type="password" value={form.password} onChange={e => setForm(f => ({
-          ...f,
-          password: e.target.value
-        }))} placeholder="••••••••" style={inputStyle} onKeyDown={e => e.key === "Enter" && submit()} />
-      </div>
-      <button onClick={submit} disabled={loading} style={{
-        ...btnStyle("primary"),
-        width: "100%",
-        padding: "12px",
-        fontSize: "0.92rem"
-      }}>
+      <button onClick={submit} disabled={loading} style={{ ...btnStyle("primary"), width: "100%", padding: "12px", fontSize: "0.92rem", marginTop: 20 }}>
         {loading ? "Please wait..." : isReg ? "Create Account →" : "Sign In →"}
       </button>
-      <div className="idx-style-220">
+      <div className="idx-style-220" style={{ marginTop: 20 }}>
         {isReg ? "Have account? " : "New here? "}
-        <span onClick={() => setIsReg(r => !r)} className="idx-style-221">
-          {isReg ? "Sign In" : "Register"}
-        </span>
+        <span onClick={() => setIsReg(r => !r)} className="idx-style-221">{isReg ? "Sign In" : "Register Now"}</span>
       </div>
     </div>
   </div>;
@@ -1315,44 +1349,46 @@ function LoginPage({ }) {
 // ============================================================
 // ORDERS PAGE
 // ============================================================
-function OrdersPage({
-  orders
-}) {
-  if (orders.length === 0) return <div className="idx-style-226">
+function OrdersPage({ orders, token }) {
+  const [realOrders, setRealOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      setLoading(true);
+      fetch(`${API_BASE}/api/orders/my`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => setRealOrders(Array.isArray(data) ? data : []))
+        .catch(err => console.error("History fetch error:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [token]);
+
+  const displayOrders = realOrders.length > 0 ? realOrders : orders;
+
+  if (loading) return <div className="idx-style-226"><p>Loading your orders...</p></div>;
+  if (!loading && displayOrders.length === 0) return <div className="idx-style-226">
     <div className="idx-style-227">📦</div>
     <h2 className="idx-style-228">No orders yet</h2>
-    <p className="idx-style-229">
-      Your order history will appear here after you place an order.
-    </p>
+    <p className="idx-style-229">Your order history will appear here after you place an order.</p>
   </div>;
+
   return <div className="idx-style-230">
     <h1 className="idx-style-231">My Orders</h1>
-    {orders.map((o, i) => <div key={i} style={{
-      ...cardStyle,
-      marginBottom: 13
-    }}>
+    {displayOrders.map((o, i) => <div key={o.orderId || i} style={{ ...cardStyle, marginBottom: 13 }}>
       <div className="idx-style-232">
         <div>
           <div className="idx-style-233">#{o.orderId}</div>
-          <div className="idx-style-234">
-            Placed on {new Date().toLocaleDateString("en-IN")}
-          </div>
-          <div className="idx-style-235">
-            📍 {o.address}, {o.city}, {o.state} - {o.pincode}
-          </div>
-          <div className="idx-style-236">
-            📅 Delivery: {o.delivery} • {o.items?.length || 0} item
-            {o.items?.length !== 1 ? "s" : ""}
-          </div>
+          <div className="idx-style-234">Placed on {new Date(o.createdAt || Date.now()).toLocaleDateString("en-IN")}</div>
+          <div className="idx-style-235">📍 {o.customer?.address || o.address}, {o.customer?.city || o.city}</div>
+          <div className="idx-style-236">📅 Status: {o.status || "Confirmed"} • {o.items?.length || 0} items</div>
         </div>
         <div className="idx-style-237">
-          <div className="idx-style-238">
-            ₹{o.total?.toLocaleString("en-IN")}
-          </div>
-          <div className="idx-style-239">
-            {o.method === "cod" ? "Cash on Delivery" : "Paid Online"}
-          </div>
-          <span className="idx-style-240">Confirmed ✓</span>
+          <div className="idx-style-238">₹{o.total?.toLocaleString("en-IN")}</div>
+          <div className="idx-style-239">{o.paymentMethod || o.method === "cod" ? "Cash on Delivery" : "GPay"}</div>
+          <span className="idx-style-240" style={{ color: "#4CAF50" }}>{o.status || "Confirmed ✓"}</span>
         </div>
       </div>
     </div>)}
@@ -1362,11 +1398,7 @@ function OrdersPage({
 // ============================================================
 // NAVBAR
 // ============================================================
-function Navbar({
-  page,
-  cart,
-  onNavigate
-}) {
+function Navbar({ page, cart, onNavigate, user, onLogout }) {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   return <nav className="idx-style-241">
     <div className="idx-style-242">
@@ -1387,37 +1419,21 @@ function Navbar({
           fontSize: "0.8rem",
           fontWeight: page === p ? 700 : 400,
           borderBottom: page === p ? "2px solid #FFD700" : "2px solid transparent"
-        }}>
-          {l}
-        </button>)}
+        }}>{l}</button>)}
 
-        <button onClick={() => {
-          onNavigate("cart");
-        }} style={{
-          ...btnStyle("primary"),
-          padding: "7px 13px",
-          fontSize: "0.8rem",
-          position: "relative",
-          marginLeft: 4
-        }}>
-          🛒{" "}
-          {cartCount > 0 && <span style={{
-            position: "absolute",
-            top: -6,
-            right: -6,
-            background: "#FF1744",
-            color: "#fff",
-            borderRadius: "50%",
-            width: 17,
-            height: 17,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "0.6rem",
-            fontWeight: 900
-          }}>
-            {cartCount}
-          </span>}
+        {user ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button onClick={() => onNavigate("orders")} style={{ background: "none", border: "none", color: page === "orders" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
+            👤 {user.name.split(" ")[0]}
+          </button>
+          <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#FF5252", padding: "4px 8px", borderRadius: 6, fontSize: "0.7rem", cursor: "pointer" }}>
+            Logout
+          </button>
+        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem" }}>
+          Login
+        </button>}
+
+        <button onClick={() => onNavigate("cart")} style={{ ...btnStyle("primary"), padding: "7px 13px", fontSize: "0.8rem", position: "relative", marginLeft: 4 }}>
+          🛒 {cartCount > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: "#FF1744", color: "#fff", borderRadius: "50%", width: 17, height: 17, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 900 }}>{cartCount}</span>}
         </button>
       </div>
     </div>
@@ -1456,56 +1472,121 @@ export default function ShopApp() {
     fetchProducts();
   }, []);
 
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [page, setPage] = useState("home");
   const [productId, setProductId] = useState(null);
   const [orderId, setOrderId] = useState(null);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [toast, setToast] = useState(null);
-  const [authModal, setAuthModal] = useState(null); // "login" | "register"
-  const [pendingAction, setPendingAction] = useState(null);
   const showToast = msg => setToast(msg);
+
+  // Load session on mount & re-sync profile
+  useEffect(() => {
+    const sToken = localStorage.getItem("srt_token");
+    if (sToken) {
+      setToken(sToken);
+      fetch(`${API_BASE}/api/auth/me`, {
+        headers: { "Authorization": `Bearer ${sToken}` }
+      })
+        .then(res => res.json())
+        .then(u => {
+          if (u && !u.error) {
+            setUser(u);
+            localStorage.setItem("srt_user", JSON.stringify(u));
+          }
+        })
+        .catch(() => {
+          // If fetch fails, fallback to local storage
+          const sUser = localStorage.getItem("srt_user");
+          if (sUser) setUser(JSON.parse(sUser));
+        });
+    }
+  }, []);
+
+  const onLogin = (u, t) => {
+    setUser(u);
+    setToken(t);
+    localStorage.setItem("srt_token", t);
+    localStorage.setItem("srt_user", JSON.stringify(u));
+    setPage("home");
+  };
+
+  const onLogout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("srt_token");
+    localStorage.removeItem("srt_user");
+    setPage("home");
+  };
+
   const onNavigate = (p, id) => {
+    if (p === "checkout" && !user) {
+      setPage("login");
+      showToast("Please login to proceed to checkout");
+      return;
+    }
     setPage(p);
     if (p === "product") setProductId(id);
     if (p === "success") setOrderId(id);
     window.scrollTo(0, 0);
   };
 
-  // Call this whenever an action requires login
-
   const onAddToCart = useCallback(product => {
     const qty = product.qty || 1;
     setCart(c => {
       const ex = c.find(i => i.id === product.id);
-      if (ex) return c.map(i => i.id === product.id ? {
-        ...i,
-        qty: i.qty + qty
-      } : i);
-      return [...c, {
-        ...product,
-        qty
-      }];
+      if (ex) return c.map(i => i.id === product.id ? { ...i, qty: i.qty + qty } : i);
+      return [...c, { ...product, qty }];
     });
     showToast(`✓ ${product.name} added to cart!`);
   }, []);
+
   const onUpdate = (id, qty) => {
     if (qty < 1) return onRemove(id);
-    setCart(c => c.map(i => i.id === id ? {
-      ...i,
-      qty
-    } : i));
+    setCart(c => c.map(i => i.id === id ? { ...i, qty } : i));
   };
   const onRemove = id => setCart(c => c.filter(i => i.id !== id));
-  const onPlaceOrder = data => {
-    setOrders(o => [...o, data]);
-    setCart([]);
+
+  const onPlaceOrder = async (data) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/orders/cod`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...data,
+          customer: {
+            name: data.name,
+            mobile: data.mobile,
+            email: data.email,
+            address: data.address,
+            city: data.city,
+            state: data.state,
+            pincode: data.pincode
+          },
+          subtotal: data.total - (data.total >= 999 ? 0 : 99),
+          deliveryCharge: data.total >= 999 ? 0 : 99,
+          total: data.total,
+          items: data.items.map(it => ({ product: it.id, name: it.name, price: it.price, qty: it.qty, image: it.image }))
+        })
+      });
+      if (res.ok) {
+        setOrders(o => [...o, data]);
+        setCart([]);
+      }
+    } catch (err) {
+      console.error("Failed to save order to DB:", err);
+      // Fallback for offline/error
+      setOrders(o => [...o, data]);
+      setCart([]);
+    }
   };
 
-  const shared = {
-    onAddToCart,
-    onNavigate
-  };
+  const shared = { onAddToCart, onNavigate };
   return <div className="idx-style-250">
     <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
@@ -1522,17 +1603,17 @@ export default function ShopApp() {
       `}</style>
 
     <FireworksCanvas />
-    <Navbar page={page} cart={cart} onNavigate={onNavigate} />
+    <Navbar page={page} cart={cart} onNavigate={onNavigate} user={user} onLogout={onLogout} />
 
     <main className="idx-style-251">
       {page === "home" && <HomePage products={products} {...shared} />}
       {page === "products" && <ProductsPage products={products} {...shared} />}
       {page === "product" && <ProductDetailPage productId={productId} products={products} {...shared} />}
       {page === "cart" && <CartPage cart={cart} onUpdate={onUpdate} onRemove={onRemove} onNavigate={onNavigate} />}
-      {page === "checkout" && <CheckoutPage cart={cart} onPlaceOrder={onPlaceOrder} onNavigate={onNavigate} />}
+      {page === "checkout" && <CheckoutPage cart={cart} onPlaceOrder={onPlaceOrder} onNavigate={onNavigate} user={user} />}
       {page === "success" && <OrderSuccessPage orderId={orderId} onNavigate={onNavigate} />}
-      {page === "login" && <LoginPage />}
-      {page === "orders" && <OrdersPage orders={orders} />}
+      {page === "login" && <LoginPage onLogin={onLogin} showToast={showToast} />}
+      {page === "orders" && <OrdersPage orders={orders} token={token} />}
     </main>
 
     {/* FOOTER */}
