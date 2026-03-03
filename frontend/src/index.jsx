@@ -313,7 +313,7 @@ function BannerCarousel({ banners }) {
         <div
           key={b._id || i}
           className={`banner-slide ${i === active ? 'active' : ''}`}
-          style={{ backgroundImage: `url(${b.image})` }}
+          style={{ backgroundImage: `url(${b.image && b.image.startsWith("/") ? API_BASE + b.image : b.image})` }}
         >
           <div className="banner-overlay" />
           <div className="banner-content">
@@ -410,8 +410,8 @@ function ProductCard({
 // HOME PAGE
 // ============================================================
 function HomePage({
-  products,
-  banners,
+  products = [],
+  banners = [],
   onNavigate,
   onAddToCart
 }) {
@@ -1663,7 +1663,7 @@ export default function ShopApp() {
     }
   };
 
-  const shared = { onAddToCart, onNavigate };
+  const shared = { onAddToCart, onNavigate, banners };
   return <div className="idx-style-250">
     <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');

@@ -914,17 +914,15 @@ function ProductsPage({ products, setProducts }) {
               <div className="adm-style-62">LOW STOCK</div>
             )}
             <div className="adm-style-63">
-              {p.images &&
-                p.images.length &&
-                typeof p.images[0] === "string" &&
-                p.images[0].startsWith("/uploads/") ? (
+              {p.images && p.images.length && (p.images[0].startsWith("/") || p.images[0].startsWith("http")) ? (
                 <img
-                  src={API_BASE + p.images[0]}
+                  src={p.images[0].startsWith("/") ? API_BASE + p.images[0] : p.images[0]}
                   alt={p.name}
                   className="adm-style-64"
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 />
               ) : (
-                p.emoji
+                p.emoji || "🎇"
               )}
             </div>
             <div className="adm-style-65">{p.category}</div>
