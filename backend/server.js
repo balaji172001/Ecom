@@ -12,23 +12,19 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const multer = require("multer");
 const path = require("path");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, "uploads");
-const fs = require("fs");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+
 
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static(uploadDir));
 
 // ============================================================
 // DATABASE CONNECTION
@@ -194,19 +190,27 @@ const adminAuth = async (req, res, next) => {
 };
 
 // ============================================================
-// FILE UPLOAD
+// FILE UPLOAD (Cloudinary)
 // ============================================================
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "products",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  },
+});
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only images allowed"));
-  },
 });
 
 // ============================================================
@@ -310,7 +314,7 @@ app.get("/api/products/:id", async (req, res) => {
 app.post("/api/admin/products", adminAuth, upload.array("images", 5), async (req, res) => {
   try {
     const { name, description, category, price, mrp, discount, stock } = req.body;
-    const images = req.files?.map(f => `/uploads/${f.filename}`) || [];
+    const images = req.files?.map(f => f.path) || [];
     const product = await Product.create({ name, description, category, price, mrp, discount, stock, images });
     res.json(product);
   } catch (err) {
@@ -321,7 +325,7 @@ app.post("/api/admin/products", adminAuth, upload.array("images", 5), async (req
 app.put("/api/admin/products/:id", adminAuth, upload.array("images", 5), async (req, res) => {
   try {
     const updates = { ...req.body };
-    if (req.files?.length) updates.images = req.files.map(f => `/uploads/${f.filename}`);
+    if (req.files?.length) updates.images = req.files.map(f => f.path);
     const product = await Product.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json(product);
   } catch (err) {
