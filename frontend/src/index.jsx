@@ -642,6 +642,49 @@ function ProductDetailPage({
   const p = products.find(x => x.id === productId);
   const [qty, setQty] = useState(1);
   const [imgIdx, setImgIdx] = useState(0);
+
+    // Inject Product JSON-LD schema for SEO rich results
+  useEffect(() => {
+    if (!p) return;
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": p.name,
+      "description": p.desc || `${p.name} – Premium Sivakasi fireworks. Category: ${p.category}. Unit: ${p.unit}.`,
+      "category": p.category,
+      "brand": { "@type": "Brand", "name": "Sri Ram Balaji Agency" },
+      "offers": {
+        "@type": "Offer",
+        "url": `https://ram-balaji-shop.vercel.app/#product-${p.id}`,
+        "priceCurrency": "INR",
+        "price": p.price,
+        "priceValidUntil": "2025-11-14",
+        "availability": p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "seller": { "@type": "Organization", "name": "Sri Ram Balaji Agency" }
+      },
+      "aggregateRating": p.rating ? {
+        "@type": "AggregateRating",
+        "ratingValue": p.rating,
+        "reviewCount": p.reviews || 10,
+        "bestRating": 5
+      } : undefined
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "product-schema";
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+    // Update page title for this product
+    const prevTitle = document.title;
+    document.title = `${p.name} – Sri Ram Balaji Agency | Sivakasi Crackers`;
+    return () => {
+      const el = document.getElementById("product-schema");
+      if (el) el.remove();
+      document.title = prevTitle;
+    };
+  }, [p?.id]);
+
+
   if (!p) return <div className="idx-style-98">Product not found</div>;
   const related = products.filter(x => x.category === p.category && x.id !== p.id).slice(0, 4);
   const discount = Math.round((1 - p.price / p.mrp) * 100);

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Block admin build artifacts
+Disallow: /build-admin/
+Disallow: /build-shop/
+
+Sitemap: https://ram-balaji-shop.vercel.app/sitemap.xml
