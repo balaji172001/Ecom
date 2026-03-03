@@ -144,6 +144,17 @@ function FireworksCanvas() {
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5004";
 
+// Helper to render emoji or img tag (hoisted)
+function renderImage(img, className) {
+  if (!img) return "🎇";
+  if (typeof img !== 'string') return img;
+  if (img.startsWith("/") || img.startsWith("http")) {
+    const src = img.startsWith("/") ? `${API_BASE}${img}` : img;
+    return <img src={src} alt="product" className={className} style={{ width: "100%", height: "100%", objectFit: "contain" }} />;
+  }
+  return img;
+}
+
 const CATEGORIES = ["All", "Flash Light Crackers", "Deluxe Crackers", "Garalands", "Bijili Crackers", "Ground Chakkar", "Flower Pots", "Multi Colour Flower Pots", "Twinkling Star", "Bombs", "Candles", "Novelties", "Rockets", "Special Fountains", "Sparkless", "Fancy Items", "Fountain", "Aerial Fancy", "Repeating Multi Colour Function Shots"];
 const REVIEWS = [{
   name: "Priya S.",
@@ -266,6 +277,7 @@ const StarRating = ({
     {"☆".repeat(5 - Math.floor(rating))}
     <span className="idx-style-3">({rating})</span>
   </span>;
+
 function SectionTitle({
   icon,
   title,
@@ -363,7 +375,7 @@ function ProductCard({
     e.currentTarget.style.transform = "translateY(0)";
     e.currentTarget.style.borderColor = "rgba(255,215,0,0.15)";
   }}>
-    <div className="idx-style-34">{p.image}</div>
+    <div className="idx-style-34">{renderImage(p.image, "idx-style-34-img")}</div>
     {p.stock === 0 && <div className="idx-style-35">OUT OF STOCK</div>}
     {p.stock > 0 && p.stock < 10 && <div className="idx-style-36">Only {p.stock} left!</div>}
     <div className="idx-style-37">
@@ -397,6 +409,7 @@ function ProductCard({
 // ============================================================
 function HomePage({
   products,
+  banners,
   onNavigate,
   onAddToCart
 }) {
@@ -751,7 +764,7 @@ function ProductDetailPage({
     <div className="idx-style-101">
       {/* Images */}
       <div>
-        <div className="idx-style-102">{imgs[imgIdx]}</div>
+        <div className="idx-style-102">{renderImage(imgs[imgIdx], "idx-style-102-img")}</div>
         <div className="idx-style-103">
           {imgs.map((img, i) => <button key={i} onClick={() => setImgIdx(i)} style={{
             background: imgIdx === i ? "rgba(255,215,0,0.18)" : "rgba(255,255,255,0.04)",
@@ -761,7 +774,7 @@ function ProductDetailPage({
             cursor: "pointer",
             fontSize: "1.4rem"
           }}>
-            {img}
+            {renderImage(img, "idx-style-103-thumb")}
           </button>)}
         </div>
       </div>
@@ -922,7 +935,7 @@ function CartPage({
             alignItems: "center",
             flexWrap: "wrap"
           }}>
-            <div className="idx-style-142">{item.image}</div>
+            <div className="idx-style-142">{renderImage(item.image, "idx-style-142-img")}</div>
             <div className="idx-style-143">
               <div className="idx-style-144">
                 {item.category} • {item.unit}
