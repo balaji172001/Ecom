@@ -17,14 +17,18 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-// Redundant check removed
-// ============================================================
-// MIDDLEWARE
-// ============================================================
+
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, "uploads");
+const fs = require("fs");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(uploadDir));
 
 // ============================================================
 // DATABASE CONNECTION

@@ -378,7 +378,17 @@ function Dashboard({ products, orders }) {
           {topProducts.map((p, i) => (
             <div key={p.id} className="adm-style-32">
               <span className="adm-style-33">#{i + 1}</span>
-              <span className="adm-style-34">{p.emoji}</span>
+              <div className="adm-style-34" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222', borderRadius: 8, overflow: 'hidden' }}>
+                {p.images && p.images.length && (p.images[0].startsWith("/") || p.images[0].startsWith("http")) ? (
+                  <img
+                    src={p.images[0].startsWith("/") ? API_BASE + p.images[0] : p.images[0]}
+                    alt={p.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '1.2rem' }}>{p.emoji || "🎇"}</span>
+                )}
+              </div>
               <div className="adm-style-35">
                 <div className="adm-style-36">{p.name}</div>
                 <div className="adm-style-37">
