@@ -5,4 +5,4 @@ Allow: /
 Disallow: /build-admin/
 Disallow: /build-shop/
 
-Sitemap: https://ram-balaji-shop.vercel.app/sitemap.xml
+Sitemap: https://www.rambalajishop.shop/sitemap.xml

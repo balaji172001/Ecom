@@ -142,7 +142,7 @@ function FireworksCanvas() {
 // (All 76 products, names & prices exactly from the PDF)
 // ============================================================
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5003";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5004";
 
 const CATEGORIES = ["All", "Flash Light Crackers", "Deluxe Crackers", "Garalands", "Bijili Crackers", "Ground Chakkar", "Flower Pots", "Multi Colour Flower Pots", "Twinkling Star", "Bombs", "Candles", "Novelties", "Rockets", "Special Fountains", "Sparkless", "Fancy Items", "Fountain", "Aerial Fancy", "Repeating Multi Colour Function Shots"];
 const REVIEWS = [{
@@ -277,6 +277,56 @@ function SectionTitle({
     {sub && <p className="idx-style-7">{sub}</p>}
   </div>;
 }
+// ============================================================
+// BANNER CAROUSEL
+// ============================================================
+function BannerCarousel({ banners }) {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (!banners.length) return;
+    const t = setInterval(() => {
+      setActive(prev => (prev + 1) % banners.length);
+    }, 4500);
+    return () => clearInterval(t);
+  }, [banners.length]);
+
+  if (!banners.length) return null;
+
+  return (
+    <div className="banner-slider">
+      {banners.map((b, i) => (
+        <div
+          key={b._id || i}
+          className={`banner-slide ${i === active ? 'active' : ''}`}
+          style={{ backgroundImage: `url(${b.image})` }}
+        >
+          <div className="banner-overlay" />
+          <div className="banner-content">
+            <span className="banner-emoji">{b.emoji}</span>
+            <div className="banner-text">
+              <h2 className="banner-title">{b.title}</h2>
+              <p className="banner-subtitle">{b.subtitle}</p>
+            </div>
+            <button className="banner-btn" onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}>
+              Explore Now 🎆
+            </button>
+          </div>
+        </div>
+      ))}
+      <div className="banner-dots">
+        {banners.map((_, i) => (
+          <div
+            key={i}
+            className={`banner-dot ${i === active ? 'active' : ''}`}
+            onClick={() => setActive(i)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Toast({
   msg,
   onClose
@@ -357,42 +407,47 @@ function HomePage({
     return () => clearInterval(t);
   }, []);
   return <div>
-    {/* HERO */}
-    <section className="idx-style-44">
-      <div className="idx-style-45">🪔</div>
-      <div className="idx-style-46">Sri Gopalsamy Presents</div>
-      <h1 className="idx-style-47">
-        Sri Ram Balaji
-        <br />
-        Agency
-      </h1>
-      <p className="idx-style-48">
-        Premium Quality Fireworks • Price List 2025
-      </p>
-      <p className="idx-style-49">
-        329-H/1, Srivilliputtur to Alangulam Road, Sri Venkateswara Nagar
-        <br />
-        Pillaiyarkulam, P. Ramachatrapuram - 626 137, Srivilliputtur (T.K)
-      </p>
-      <p className="idx-style-50">📞 99407 67763 &nbsp;|&nbsp; 99409 19857</p>
-      <div className="idx-style-51">
-        🎉 Special Offer — Discount UPTO 50% OFF on all products!
-      </div>
-      <div className="idx-style-52">
-        <button onClick={() => onNavigate("products")} style={btnStyle("primary")}>
-          Shop Now 🎆
-        </button>
-        <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
-          View All {products.length} Products →
-        </button>
-      </div>
-      <div className="idx-style-53">
-        {[[`${products.length}+`, "Products"], ["50%", "Max Discount"], ["2025", "Price List"], ["Licensed", "& Certified"]].map(([n, l]) => <div key={l} className="idx-style-54">
-          <div className="idx-style-55">{n}</div>
-          <div className="idx-style-56">{l}</div>
-        </div>)}
-      </div>
-    </section>
+    {/* DYNAMIC BANNERS */}
+    <BannerCarousel banners={banners} />
+
+    {/* HERO (Shown if no banners or as legacy header) */}
+    {!banners.length && (
+      <section className="idx-style-44">
+        <div className="idx-style-45">🪔</div>
+        <div className="idx-style-46">Sri Gopalsamy Presents</div>
+        <h1 className="idx-style-47">
+          Sri Ram Balaji
+          <br />
+          Agency
+        </h1>
+        <p className="idx-style-48">
+          Premium Quality Fireworks • Price List 2025
+        </p>
+        <p className="idx-style-49">
+          329-H/1, Srivilliputtur to Alangulam Road, Sri Venkateswara Nagar
+          <br />
+          Pillaiyarkulam, P. Ramachatrapuram - 626 137, Srivilliputtur (T.K)
+        </p>
+        <p className="idx-style-50">📞 99407 67763 &nbsp;|&nbsp; 99409 19857</p>
+        <div className="idx-style-51">
+          🎉 Special Offer — Discount UPTO 50% OFF on all products!
+        </div>
+        <div className="idx-style-52">
+          <button onClick={() => onNavigate("products")} style={btnStyle("primary")}>
+            Shop Now 🎆
+          </button>
+          <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
+            View All {products.length} Products →
+          </button>
+        </div>
+        <div className="idx-style-53">
+          {[[`${products.length}+`, "Products"], ["50%", "Max Discount"], ["2025", "Price List"], ["Licensed", "& Certified"]].map(([n, l]) => <div key={l} className="idx-style-54">
+            <div className="idx-style-55">{n}</div>
+            <div className="idx-style-56">{l}</div>
+          </div>)}
+        </div>
+      </section>
+    )}
 
 
 
@@ -655,7 +710,7 @@ function ProductDetailPage({
       "brand": { "@type": "Brand", "name": "Sri Ram Balaji Agency" },
       "offers": {
         "@type": "Offer",
-        "url": `https://ram-balaji-shop.vercel.app/#product-${p.id}`,
+        "url": `https://www.rambalajishop.shop/product-${p.id}`,
         "priceCurrency": "INR",
         "price": p.price,
         "priceValidUntil": "2025-11-14",
@@ -1448,6 +1503,12 @@ export default function ShopApp() {
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
+    // Fetch Banners
+    fetch(`${API_BASE}/api/banners`)
+      .then(res => res.json())
+      .then(data => setBanners(data || []))
+      .catch(err => console.error("Banner fetch error", err));
+
     const fetchProducts = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/products?limit=200`);
@@ -1479,6 +1540,7 @@ export default function ShopApp() {
   const [orderId, setOrderId] = useState(null);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [toast, setToast] = useState(null);
   const showToast = msg => setToast(msg);
 
@@ -1600,13 +1662,34 @@ export default function ShopApp() {
         @keyframes popIn { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
         input:focus, select:focus { border-color:rgba(255,215,0,0.42) !important; box-shadow:0 0 0 2px rgba(255,215,0,0.08); }
+
+        /* Banner Slider Styles */
+        .banner-slider { position:relative; width:100%; height:420px; overflow:hidden; border-radius:30px; margin-bottom:40px; }
+        .banner-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.8s ease; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; }
+        .banner-slide.active { opacity:1; }
+        .banner-overlay { position:absolute; inset:0; background:linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%); }
+        .banner-content { position:relative; z-index:2; text-align:left; max-width:600px; padding:0 40px; animation: slideIn 0.8s ease; }
+        .banner-emoji { font-size:4rem; margin-bottom:10px; display:block; filter:drop-shadow(0 0 10px rgba(255,215,0,0.4)); }
+        .banner-title { font-family:'Cinzel', serif; font-size:3.2rem; color:#FFD700; line-height:1.1; margin-bottom:15px; text-shadow:2px 2px 10px rgba(0,0,0,0.5); }
+        .banner-subtitle { font-family:'Playfair Display', serif; font-size:1.3rem; color:#AAA; margin-bottom:25px; }
+        .banner-btn { background:linear-gradient(135deg,#FF6B35,#FFD700); color:#000; border:none; padding:12px 30px; border-radius:12px; font-weight:900; font-family:'Cinzel', serif; cursor:pointer; font-size:1rem; transition:transform 0.2s; }
+        .banner-btn:hover { transform: scale(1.05); }
+        .banner-dots { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:3; }
+        .banner-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; transition:all 0.3s; }
+        .banner-dot.active { background:#FFD700; width:30px; border-radius:10px; }
+        @media (max-width:768px) {
+          .banner-slider { height:320px; border-radius:20px; }
+          .banner-title { font-size:2rem; }
+          .banner-subtitle { font-size:1rem; }
+          .banner-emoji { font-size:2.5rem; }
+        }
       `}</style>
 
     <FireworksCanvas />
     <Navbar page={page} cart={cart} onNavigate={onNavigate} user={user} onLogout={onLogout} />
 
     <main className="idx-style-251">
-      {page === "home" && <HomePage products={products} {...shared} />}
+      {page === "home" && <HomePage products={products} banners={banners} {...shared} />}
       {page === "products" && <ProductsPage products={products} {...shared} />}
       {page === "product" && <ProductDetailPage productId={productId} products={products} {...shared} />}
       {page === "cart" && <CartPage cart={cart} onUpdate={onUpdate} onRemove={onRemove} onNavigate={onNavigate} />}
