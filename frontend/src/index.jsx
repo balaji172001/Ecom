@@ -383,7 +383,7 @@ function HomePage({
           Shop Now 🎆
         </button>
         <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
-          View All 75 Products →
+          View All {products.length} Products →
         </button>
       </div>
       <div className="idx-style-53">
@@ -453,7 +453,7 @@ function HomePage({
       </div>
       <div className="idx-style-69">
         <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
-          View All 75 Products →
+          View All {products.length} Products →
         </button>
       </div>
     </section>
@@ -878,9 +878,6 @@ function CartPage({
         }}>
           {couponMsg}
         </div>}
-        <div className="idx-style-157">
-          Try: BALAJI20 · DIWALI15 · FIRST10
-        </div>
         {[["Subtotal", `₹${subtotal.toLocaleString("en-IN")}`], ["Delivery", delivery === 0 ? "FREE 🎉" : `₹${delivery}`], ...(discount ? [["Discount", `-₹${discAmt.toLocaleString("en-IN")}`]] : [])].map(([k, v]) => <div key={k} className="idx-style-158">
           <span>{k}</span>
           <span style={{
@@ -932,9 +929,8 @@ function CheckoutPage({
     address: "",
     city: "",
     state: "Tamil Nadu",
-    pincode: "",
-    delivery: ""
-  });
+    pincode: ""
+    });
   const [method, setMethod] = useState("upi");
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
@@ -948,7 +944,6 @@ function CheckoutPage({
     if (!form.address.trim()) e.address = "Address required";
     if (!form.city.trim()) e.city = "City required";
     if (!/^\d{6}$/.test(form.pincode)) e.pincode = "Valid 6-digit pincode required";
-    if (!form.delivery) e.delivery = "Select delivery date";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -967,21 +962,13 @@ function CheckoutPage({
     });
     onNavigate("success", orderId);
   };
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dates = Array.from({
-    length: 7
-  }, (_, i) => {
-    const d = new Date(tomorrow);
-    d.setDate(d.getDate() + i);
-    return d.toISOString().split("T")[0];
-  });
+
   return <div className="idx-style-161">
     <h1 className="idx-style-162">Checkout</h1>
     <p className="idx-style-163">Sri Ram Balaji Agency • Srivilliputtur</p>
     {/* Steps */}
     <div className="idx-style-164">
-      {["Delivery Details", "Payment"].map((s, i) => <div key={s} className="idx-style-165">
+      {["User Details", "Payment"].map((s, i) => <div key={s} className="idx-style-165">
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -1022,7 +1009,7 @@ function CheckoutPage({
     <div className="idx-style-166">
       <div>
         {step === 1 && <div style={cardStyle}>
-          <h3 className="idx-style-167">Delivery Details</h3>
+          <h3 className="idx-style-167">User Details</h3>
           <div className="idx-style-168">
             {[["name", "Full Name", "text"], ["mobile", "Mobile Number", "tel"], ["email", "Email Address", "email"], ["address", "Full Address", "text"], ["city", "City", "text"], ["pincode", "Pincode", "text"]].map(([f, l, t]) => <div key={f} style={{
               gridColumn: f === "address" ? "1/-1" : "auto"
@@ -1046,33 +1033,7 @@ function CheckoutPage({
                 {["Tamil Nadu", "Kerala", "Karnataka", "Andhra Pradesh", "Telangana", "Maharashtra", "Gujarat", "Rajasthan", "Delhi", "West Bengal"].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
-            <div className="idx-style-174">
-              <label className="idx-style-175">
-                Preferred Delivery Date
-              </label>
-              <select value={form.delivery} onChange={e => setForm(p => ({
-                ...p,
-                delivery: e.target.value
-              }))} style={{
-                width: "100%",
-                background: "rgba(20,5,0,0.9)",
-                border: `1px solid ${errors.delivery ? "#FF5252" : "rgba(255,215,0,0.2)"}`,
-                borderRadius: 10,
-                padding: "10px 14px",
-                color: "#fff",
-                fontSize: "0.86rem"
-              }}>
-                <option value="">Select delivery date</option>
-                {dates.map(d => <option key={d} value={d}>
-                  {new Date(d).toLocaleDateString("en-IN", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long"
-                  })}
-                </option>)}
-              </select>
-              {errors.delivery && <div className="idx-style-176">{errors.delivery}</div>}
-            </div>
+
           </div>
           <button onClick={() => validate() && setStep(2)} style={{
             ...btnStyle("primary"),
