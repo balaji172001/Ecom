@@ -2,7 +2,9 @@ import "./admin.css";
 import { useState, useEffect } from "react";
 
 // API base — when running frontend in CRA (port 3000) and backend on 5003
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5004";
+const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:5004"
+  : "https://ecom-rne9.onrender.com";
 
 // ============================================================
 // STATUS COLORS
@@ -1363,7 +1365,11 @@ function BannersPage({ banners, setBanners }) {
             }}
           >
             <div style={{ width: 80, height: 50, borderRadius: 8, overflow: "hidden", background: "#333" }}>
-              <img src={b.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img
+                src={b.image.startsWith("/") ? `${API_BASE}${b.image}` : b.image}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: "#FFD700" }}>{b.emoji} {b.title}</div>

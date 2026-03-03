@@ -142,7 +142,9 @@ function FireworksCanvas() {
 // (All 76 products, names & prices exactly from the PDF)
 // ============================================================
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5004";
+const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:5004"
+  : "https://ecom-rne9.onrender.com";
 
 // Helper to render emoji or img tag (hoisted)
 function renderImage(img, className) {
@@ -1514,6 +1516,16 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
 export default function ShopApp() {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [page, setPage] = useState("home");
+  const [productId, setProductId] = useState(null);
+  const [orderId, setOrderId] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [banners, setBanners] = useState([]);
+  const [toast, setToast] = useState(null);
+  const showToast = msg => setToast(msg);
 
   useEffect(() => {
     // Fetch Banners
@@ -1546,16 +1558,6 @@ export default function ShopApp() {
     fetchProducts();
   }, []);
 
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [page, setPage] = useState("home");
-  const [productId, setProductId] = useState(null);
-  const [orderId, setOrderId] = useState(null);
-  const [cart, setCart] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [banners, setBanners] = useState([]);
-  const [toast, setToast] = useState(null);
-  const showToast = msg => setToast(msg);
 
   // Load session on mount & re-sync profile
   useEffect(() => {
