@@ -143,7 +143,7 @@ function FireworksCanvas() {
 // ============================================================
 
 const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:5004"
+  ? "http://localhost:5001"
   : "https://ecom-rne9.onrender.com";
 
 // Helper to render emoji or img tag (hoisted)

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 // API base — when running frontend in CRA (port 3000) and backend on 5003
 const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:5004"
+  ? "http://localhost:5001"
   : "https://ecom-rne9.onrender.com";
 
 // ============================================================
