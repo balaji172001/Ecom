@@ -143,7 +143,7 @@ function FireworksCanvas() {
 // ============================================================
 
 const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:5004"
+  ? "http://localhost:5001"
   : "https://ecom-rne9.onrender.com";
 
 // Helper to render emoji or img tag (hoisted)
@@ -165,17 +165,17 @@ const REVIEWS = [{
   rating: 5
 }, {
   name: "Rahul M.",
-  city: "Mumbai",
+  city: "Chennai",
   text: "Fast delivery, secure packaging. The 1000 Wala garland was spectacular. Kids loved the twinkling stars!",
   rating: 5
 }, {
   name: "Kavitha R.",
-  city: "Bangalore",
+  city: "Chennai",
   text: "Best cracker shop online! Flower Pots Deluxe was worth every rupee. Great customer service.",
   rating: 4
 }, {
   name: "Suresh K.",
-  city: "Hyderabad",
+  city: "Chennai",
   text: "Very authentic Sri Ram Ballaji Agency. The 120 Shot function box was mind-blowing! Highly recommended!",
   rating: 5
 }];
@@ -533,7 +533,7 @@ function HomePage({
       ...sectionStyle,
       background: "rgba(255,50,0,0.05)",
       borderRadius: 20,
-      margin: "0 20px 60px",
+      margin: "0 0px 60px",
       width: "100%",
       maxWidth: "unset !important"
     }}>
@@ -1074,13 +1074,13 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-  const WHATSAPP_NUMBER = "919940767763"; // GPay & WhatsApp number
+  const WHATSAPP_NUMBER = "+916374549935"; // GPay & WhatsApp number
   const handlePayment = () => {
     if (!validate()) return;
     const orderId = "SRBA" + Date.now().toString().slice(-8).toUpperCase();
     // Build WhatsApp message with full order details
     const itemsList = cart.map(i => `  • ${i.name} × ${i.qty} = ₹${(i.price * i.qty).toLocaleString("en-IN")}`).join("\n");
-    const paymentLabel = method === "gpay" ? `GPay to 9940767763 — ₹${total.toLocaleString("en-IN")} (Please pay before delivery)` : `Cash on Delivery — ₹${total.toLocaleString("en-IN")}`;
+    const paymentLabel = method === "gpay" ? `GPay to ${WHATSAPP_NUMBER} — ₹${total.toLocaleString("en-IN")} (Please pay before delivery)` : `Cash on Delivery — ₹${total.toLocaleString("en-IN")}`;
     const msg = encodeURIComponent(
       `🎆 *New Order — Sri Ram Balaji Agency*\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
@@ -1250,7 +1250,7 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
               <div className="idx-style-180">{sub}</div>
               {val === "gpay" && method === "gpay" && <div style={{ marginTop: 12, padding: "12px 16px", background: "rgba(255,215,0,0.07)", borderRadius: 10, border: "1px solid rgba(255,215,0,0.2)" }}>
                 <div style={{ fontSize: "1rem", color: "#FFD700", fontWeight: 700, marginBottom: 4 }}>📲 GPay Number</div>
-                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>9940767763</div>
+                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>{WHATSAPP_NUMBER}</div>
                 <div style={{ fontSize: "0.78rem", color: "#aaa", marginTop: 6 }}>Send ₹{total.toLocaleString("en-IN")} to this number on GPay — screenshot will be collected via WhatsApp</div>
               </div>}
             </div>
@@ -1346,7 +1346,7 @@ function OrderSuccessPage({
       <button onClick={() => onNavigate("home")} style={btnStyle("primary")}>
         🏠 Back to Home
       </button>
-      <button onClick={() => window.open("https://wa.me/919940767763", "_blank")} style={btnStyle("outline")}>
+      <button onClick={() => window.open("https://wa.me/916374549935", "_blank")} style={btnStyle("outline")}>
         📱 Chat on WhatsApp
       </button>
     </div>
@@ -1473,13 +1473,13 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
   return <nav className="idx-style-241">
     <div className="idx-style-242">
       <div onClick={() => onNavigate("home")} className="idx-style-243">
-        <span className="idx-style-244">🪔</span>
+        <span className="idx-style-244 logo-text">🪔</span>
         <div className="idx-style-245">
           <div className="idx-style-246">Sri Ram Balaji Agency</div>
         </div>
       </div>
-      <div className="idx-style-248">
-        {[["home", "Home"], ["products", "Products"]].map(([p, l]) => <button key={p} onClick={() => onNavigate(p)} style={{
+      <div className="navbar-links">
+        {[["home", "Home", "🏠"], ["products", "Products", "🛍️"]].map(([p, l, icon]) => <button key={p} onClick={() => onNavigate(p)} style={{
           background: "none",
           border: "none",
           color: page === p ? "#FFD700" : "#888",
@@ -1489,19 +1489,16 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
           fontSize: "0.8rem",
           fontWeight: page === p ? 700 : 400,
           borderBottom: page === p ? "2px solid #FFD700" : "2px solid transparent"
-        }}>{l}</button>)}
+        }}>{icon} <span className="nav-btn-text">{l}</span></button>)}
 
         {user ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => onNavigate("orders")} style={{ background: "none", border: "none", color: page === "orders" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
-            👤 {user.name.split(" ")[0]}
+          <button onClick={() => onNavigate("orders")} style={{ background: "none", padding: "4px 8px", border: "none", color: page === "orders" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, borderBottom: page === "orders" ? "2px solid #FFD700" : "2px solid transparent" }}>
+            👤 <span className="nav-btn-text">{user.name.split(" ")[0]}</span>
           </button>
-          <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#FF5252", padding: "4px 8px", borderRadius: 6, fontSize: "0.7rem", cursor: "pointer" }}>
-            Logout
-          </button>
-        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem" }}>
-          Login
-        </button>}
-
+          <button onClick={onLogout} style={{
+            background: "none", border: "none", color: "#FF5252", padding: "4px 8px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", borderBottom: "2px solid transparent"
+          }}>🚪 <span className="nav-btn-text">Logout</span></button>
+        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", padding: "4px 8px", borderBottom: page === "login" ? "2px solid #FFD700" : "2px solid transparent" }}>🔑 <span className="nav-btn-text">Login</span></button>}
         <button onClick={() => onNavigate("cart")} style={{ ...btnStyle("primary"), padding: "7px 13px", fontSize: "0.8rem", position: "relative", marginLeft: 4 }}>
           🛒 {cartCount > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: "#FF1744", color: "#fff", borderRadius: "50%", width: 17, height: 17, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 900 }}>{cartCount}</span>}
         </button>
@@ -1763,7 +1760,7 @@ export default function ShopApp() {
     </footer>
 
     {/* WhatsApp floating button */}
-    <a href="https://wa.me/919940767763?text=Hi! I want to order from Sri Ram Balaji Agency Price List 2025" target="_blank" rel="noreferrer" className="idx-style-265">
+    <a href="https://wa.me/916374549935?text=Hi! I want to order from Sri Ram Balaji Agency Price List 2025" target="_blank" rel="noreferrer" className="idx-style-265">
       💬
     </a>
 
