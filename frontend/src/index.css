@@ -1,3 +1,10 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .idx-style-1 {
   position: fixed;
   top: 0px;
@@ -1790,4 +1797,30 @@
   z-index: 200;
   text-decoration: none;
   animation: pulse 2.5s ease-in-out infinite;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 499px) {
+  .logo-text {
+    display: none;
+  }
+
+  .idx-style-140,
+  .idx-style-166 {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .idx-style-166 div {
+    width: 100%;
+  }
+
+  .nav-btn-text {
+    display: none;
+  }
 }

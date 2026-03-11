@@ -533,7 +533,7 @@ function HomePage({
       ...sectionStyle,
       background: "rgba(255,50,0,0.05)",
       borderRadius: 20,
-      margin: "0 20px 60px",
+      margin: "0 0px 60px",
       width: "100%",
       maxWidth: "unset !important"
     }}>
@@ -1478,8 +1478,8 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
           <div className="idx-style-246">Sri Ram Balaji Agency</div>
         </div>
       </div>
-      <div className="idx-style-248">
-        {[["home", "Home"], ["products", "Products"]].map(([p, l]) => <button key={p} onClick={() => onNavigate(p)} style={{
+      <div className="navbar-links">
+        {[["home", "Home", "🏠"], ["products", "Products", "🛍️"]].map(([p, l, icon]) => <button key={p} onClick={() => onNavigate(p)} style={{
           background: "none",
           border: "none",
           color: page === p ? "#FFD700" : "#888",
@@ -1489,18 +1489,15 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
           fontSize: "0.8rem",
           fontWeight: page === p ? 700 : 400,
           borderBottom: page === p ? "2px solid #FFD700" : "2px solid transparent"
-        }}>{l}</button>)}
+        }}>{icon} <span className="nav-btn-text">{l}</span></button>)}
 
         {user ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={() => onNavigate("orders")} style={{ background: "none", border: "none", color: page === "orders" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
-            👤 {user.name.split(" ")[0]}
+            👤 <span className="nav-btn-text">{user.name.split(" ")[0]}</span>
           </button>
-          <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#FF5252", padding: "4px 8px", borderRadius: 6, fontSize: "0.7rem", cursor: "pointer" }}>
-            Logout
-          </button>
-        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem" }}>
-          Login
-        </button>}
+          <button onClick={onLogout} style={{ 
+          background:"none", border: "none", color: "#FF5252", padding: "4px 8px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer" }}>🚪 <span className="nav-btn-text">Logout</span></button>
+        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem" }}>🔑 <span className="nav-btn-text">Login</span></button>}
 
         <button onClick={() => onNavigate("cart")} style={{ ...btnStyle("primary"), padding: "7px 13px", fontSize: "0.8rem", position: "relative", marginLeft: 4 }}>
           🛒 {cartCount > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: "#FF1744", color: "#fff", borderRadius: "50%", width: 17, height: 17, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 900 }}>{cartCount}</span>}
