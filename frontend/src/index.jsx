@@ -1074,13 +1074,13 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-  const WHATSAPP_NUMBER = "919940767763"; // GPay & WhatsApp number
+  const WHATSAPP_NUMBER = "+916374549935"; // GPay & WhatsApp number
   const handlePayment = () => {
     if (!validate()) return;
     const orderId = "SRBA" + Date.now().toString().slice(-8).toUpperCase();
     // Build WhatsApp message with full order details
     const itemsList = cart.map(i => `  • ${i.name} × ${i.qty} = ₹${(i.price * i.qty).toLocaleString("en-IN")}`).join("\n");
-    const paymentLabel = method === "gpay" ? `GPay to 9940767763 — ₹${total.toLocaleString("en-IN")} (Please pay before delivery)` : `Cash on Delivery — ₹${total.toLocaleString("en-IN")}`;
+    const paymentLabel = method === "gpay" ? `GPay to ${WHATSAPP_NUMBER} — ₹${total.toLocaleString("en-IN")} (Please pay before delivery)` : `Cash on Delivery — ₹${total.toLocaleString("en-IN")}`;
     const msg = encodeURIComponent(
       `🎆 *New Order — Sri Ram Balaji Agency*\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
@@ -1250,7 +1250,7 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
               <div className="idx-style-180">{sub}</div>
               {val === "gpay" && method === "gpay" && <div style={{ marginTop: 12, padding: "12px 16px", background: "rgba(255,215,0,0.07)", borderRadius: 10, border: "1px solid rgba(255,215,0,0.2)" }}>
                 <div style={{ fontSize: "1rem", color: "#FFD700", fontWeight: 700, marginBottom: 4 }}>📲 GPay Number</div>
-                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>9940767763</div>
+                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>{WHATSAPP_NUMBER}</div>
                 <div style={{ fontSize: "0.78rem", color: "#aaa", marginTop: 6 }}>Send ₹{total.toLocaleString("en-IN")} to this number on GPay — screenshot will be collected via WhatsApp</div>
               </div>}
             </div>
@@ -1346,7 +1346,7 @@ function OrderSuccessPage({
       <button onClick={() => onNavigate("home")} style={btnStyle("primary")}>
         🏠 Back to Home
       </button>
-      <button onClick={() => window.open("https://wa.me/919940767763", "_blank")} style={btnStyle("outline")}>
+      <button onClick={() => window.open("https://wa.me/916374549935", "_blank")} style={btnStyle("outline")}>
         📱 Chat on WhatsApp
       </button>
     </div>
@@ -1760,7 +1760,7 @@ export default function ShopApp() {
     </footer>
 
     {/* WhatsApp floating button */}
-    <a href="https://wa.me/919940767763?text=Hi! I want to order from Sri Ram Balaji Agency Price List 2025" target="_blank" rel="noreferrer" className="idx-style-265">
+    <a href="https://wa.me/916374549935?text=Hi! I want to order from Sri Ram Balaji Agency Price List 2025" target="_blank" rel="noreferrer" className="idx-style-265">
       💬
     </a>
 
