@@ -161,22 +161,22 @@ const CATEGORIES = ["All", "Flash Light Crackers", "Deluxe Crackers", "Garalands
 const REVIEWS = [{
   name: "Priya S.",
   city: "Chennai",
-  text: "Excellent quality from Sri Ram Balaji Agency! The 25 Shot function box was absolutely stunning. Will order every Diwali!",
+  text: "Excellent quality from Ram Balaji Shop! The 25 Shot function box was absolutely stunning. Will order every Diwali!",
   rating: 5
 }, {
-  name: "Rahul M.",
-  city: "Chennai",
-  text: "Fast delivery, secure packaging. The 1000 Wala garland was spectacular. Kids loved the twinkling stars!",
+  name: "Karthik R.",
+  city: "Madurai",
+  text: "I bought crackers from RamBalajiShop for the first time this year. The 1000 Wala garland was pure joy for the kids. Excellent service!",
   rating: 5
 }, {
-  name: "Kavitha R.",
-  city: "Chennai",
-  text: "Best cracker shop online! Flower Pots Deluxe was worth every rupee. Great customer service.",
+  name: "Ananya M.",
+  city: "Coimbatore",
+  text: "Best cracker shop online! Ram Balaji Agency's Flower Pots Deluxe was worth every rupee. Super fast WhatsApp support.",
   rating: 4
 }, {
-  name: "Suresh K.",
-  city: "Chennai",
-  text: "Very authentic Sri Ram Ballaji Agency. The 120 Shot function box was mind-blowing! Highly recommended!",
+  name: "Arun K.",
+  city: "Trichy",
+  text: "Very authentic! The 120 Shot function box was mind-blowing! Highly recommended buying from Ram Balaji Shop.",
   rating: 5
 }];
 const COMBOS = [{
