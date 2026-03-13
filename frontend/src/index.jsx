@@ -533,7 +533,7 @@ function HomePage({
       ...sectionStyle,
       background: "rgba(255,50,0,0.05)",
       borderRadius: 20,
-      margin: "0 0px 60px",
+      margin: "0 0px 0px",
       width: "100%",
       maxWidth: "unset !important"
     }}>
@@ -1473,9 +1473,14 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
   return <nav className="idx-style-241">
     <div className="idx-style-242">
       <div onClick={() => onNavigate("home")} className="idx-style-243">
-        <span className="idx-style-244 logo-text">🪔</span>
+        <img
+          src="/RamBalajiShop-AppIcon.png"
+          alt="Ram Balaji Shop"
+          className="idx-style-244"
+          style={{ width: "32px", height: "32px", objectFit: "contain", filter: "drop-shadow(0 0 5px rgba(255,215,0,0.3))" }}
+        />
         <div className="idx-style-245">
-          <div className="idx-style-246">Sri Ram Balaji Agency</div>
+          <div className="idx-style-246 logo-text">Sri Ram Balaji Agency</div>
         </div>
       </div>
       <div className="navbar-links">
@@ -1496,7 +1501,7 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
             👤 <span className="nav-btn-text">{user.name.split(" ")[0]}</span>
           </button>
           <button onClick={onLogout} style={{
-            background: "none", border: "none", color: "#FF5252", padding: "4px 8px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", borderBottom: "2px solid transparent"
+            background: "none", border: "none", color: "#FF5252", padding: "6px 9px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", borderBottom: "2px solid transparent"
           }}>🚪 <span className="nav-btn-text">Logout</span></button>
         </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", padding: "4px 8px", borderBottom: page === "login" ? "2px solid #FFD700" : "2px solid transparent" }}>🔑 <span className="nav-btn-text">Login</span></button>}
         <button onClick={() => onNavigate("cart")} style={{ ...btnStyle("primary"), padding: "7px 13px", fontSize: "0.8rem", position: "relative", marginLeft: 4 }}>
@@ -1505,6 +1510,47 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
       </div>
     </div>
   </nav>;
+}
+
+// ============================================================
+// APK DOWNLOAD POPUP
+// ============================================================
+function APKPopup() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const shown = sessionStorage.getItem("apk_popup_shown");
+    if (!shown) {
+      const timer = setTimeout(() => setShow(true), 500);
+      return () => clearTimeout(timer);
+    }
+    if (show) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [show]);
+  const close = () => {
+    setShow(false);
+    sessionStorage.setItem("apk_popup_shown", "true");
+  };
+  if (!show) return null;
+  return (
+    <div className="apk-popup-overlay">
+      <div className="apk-popup-card">
+        <button className="apk-popup-close" onClick={close}>✕</button>
+        <div className="apk-icon">📱</div>
+        <h2 className="apk-popup-title">Download App</h2>
+        <p className="apk-popup-text">
+          Experience Sri Ram Balaji Agency on your phone. If APK needed, please download only for Android only.
+        </p>
+        <a href="/app-debug.apk" download className="apk-download-btn" onClick={close}>
+          Download APK
+        </a>
+        <div className="apk-note">⚠️ Supports Android Only</div>
+      </div>
+    </div>
+  );
 }
 
 // ============================================================
@@ -1752,7 +1798,7 @@ export default function ShopApp() {
         <div className="idx-style-264">
           <span>
             © 2026 Sri Ram Balaji Agency, Srivilliputtur.&nbsp;|&nbsp; All rights reserved.
-            <br /> Managed by Balaji G (6383783573).
+            <br /> <span className="managed-by-highlight">Managed by Balaji G (6383783573).</span>
           </span>
           <span>🔒 SSL Secured &nbsp;|&nbsp; PESO Licensed Products</span>
         </div>
@@ -1766,6 +1812,7 @@ export default function ShopApp() {
 
     {/* AUTH MODALS — appear as overlay, don't navigate away */}
 
+    <APKPopup />
     {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
   </div>;
 }
