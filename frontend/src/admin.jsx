@@ -212,7 +212,12 @@ function Sidebar({ active, onNav, collapsed, onToggle }) {
           justifyContent: collapsed ? "center" : "space-between",
         }}
       >
-        {!collapsed && <span className="adm-style-17">🪔 Admin</span>}
+        {!collapsed && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src="/RamBalajiShop-AppIcon.png" alt="Logo" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+            <span className="adm-style-17">Admin</span>
+          </div>
+        )}
         <button onClick={onToggle} className="adm-style-18">
           ☰
         </button>

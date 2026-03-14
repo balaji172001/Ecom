@@ -332,7 +332,6 @@
 .idx-style-45 {
   animation: float 3s ease-in-out infinite;
   font-size: 3.5rem;
-  margin-bottom: 12px;
 }
 
 .idx-style-46 {
@@ -349,6 +348,7 @@
   font-family: "Cinzel Decorative", serif;
   background: linear-gradient(135deg, #ffd700 0%, #ff6b35 50%, #ff1744 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 12px;
   filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.5));
@@ -1651,8 +1651,9 @@
   font-size: clamp(0.7rem, 1.7vw, 0.95rem);
   background: linear-gradient(135deg, #ffd700, #ff6b35);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-weight: 700px;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1794,9 +1795,20 @@
   justify-content: center;
   font-size: 1.6rem;
   box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
-  z-index: 200;
+  z-index: 1000;
   text-decoration: none;
   animation: pulse 2.5s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+
+.idx-style-265:hover {
+  transform: scale(1.1);
+}
+
+.managed-by-highlight {
+  color: #ff6b35;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 107, 53, 0.2);
 }
 
 .navbar-links {
@@ -1823,4 +1835,103 @@
   .nav-btn-text {
     display: none;
   }
+}
+
+/* APK Download Popup */
+.apk-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.apk-popup-card {
+  background: #1a1500;
+  border: 2px solid #ffd700;
+  border-radius: 24px;
+  max-width: 400px;
+  width: 100%;
+  padding: 40px 30px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.1);
+  animation: apkPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes apkPopIn {
+  from {
+    transform: scale(0.8) translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.apk-popup-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.apk-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.apk-popup-title {
+  color: #ffd700;
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.apk-popup-text {
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.apk-download-btn {
+  background: linear-gradient(135deg, #ff6b35, #ffd700);
+  color: #000;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-family: 'Cinzel', serif;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  transition: transform 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.apk-download-btn:hover {
+  transform: scale(1.05);
+}
+
+.apk-note {
+  font-size: 0.75rem;
+  color: #ff6b35;
+  margin-top: 15px;
+  display: block;
+  font-weight: bold;
 }
