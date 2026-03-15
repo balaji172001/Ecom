@@ -32,7 +32,22 @@ app.use(express.urlencoded({ extended: true }));
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/sivakasicracker", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}).then(() => console.log("✅ MongoDB connected"))
+}).then(async () => {
+  console.log("✅ MongoDB connected");
+  try {
+    // Force drop the old email index to let mongoose recreate it with 'sparse'
+    // This is necessary because mongoose cannot change an index's 'sparse' property once created
+    const collections = await mongoose.connection.db.listCollections({ name: 'users' }).toArray();
+    if (collections.length > 0) {
+      await mongoose.connection.db.collection('users').dropIndex('email_1').catch(e => console.log("Note: email index don't exist yet"));
+      // Clean up any existing bad data that might block registration
+      await mongoose.connection.db.collection('users').deleteMany({ $or: [{ email: null }, { email: "" }] });
+      console.log("🧹 DB Cleanup: Removed users with empty emails and reset email index.");
+    }
+  } catch (err) {
+    console.log("DB Prep info:", err.message);
+  }
+})
   .catch(err => console.error("❌ MongoDB error:", err));
 
 // ============================================================
@@ -42,8 +57,8 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/sivakasic
 // User Schema
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
-  email: { type: String, sparse: true, lowercase: true },
-  mobile: { type: String, index: { unique: true, sparse: true } },
+  email: { type: String, unique: true, sparse: true, lowercase: true },
+  mobile: { type: String, unique: true, required: true },
   password: { type: String },
   role: { type: String, enum: ["user", "admin"], default: "user" },
   address: { type: String, trim: true },
@@ -218,39 +233,69 @@ const upload = multer({
 // ============================================================
 app.post("/api/auth/register", async (req, res) => {
   try {
+    console.log("📝 Registration Attempt:", req.body);
     let { name, email, mobile } = req.body;
-    if (!name || !mobile)
-      return res.status(400).json({ error: "Name and Mobile number are required for registration" });
 
-    // Clean empty strings for optional fields to avoid unique constraint clash
-    if (email === "") email = undefined;
+    // Normalize data: Trim and remove spaces from mobile
+    if (name) name = name.trim();
+    if (mobile) mobile = mobile.trim().replace(/\s+/g, "");
+    if (email) email = email.trim().toLowerCase();
+
+    if (!name || !mobile)
+      return res.status(400).json({ error: "Name and Mobile number are required" });
+
+    // Clean empty strings for optional fields
+    if (!email || email === "") email = undefined;
 
     // Check if user exists by mobile
     const mobileExists = await User.findOne({ mobile });
     if (mobileExists) return res.status(400).json({ error: "Mobile number already registered. Please login." });
 
-    // Check if email exists (if provided)
-    if (email) {
-      const emailExists = await User.findOne({ email });
-      if (emailExists) return res.status(400).json({ error: "Email address already registered. Please login or use another email." });
+    const userData = { name, mobile };
+    if (email) userData.email = email;
+    const user = await User.create(userData);
+
+    if (!process.env.JWT_SECRET) {
+      console.error("❌ JWT_SECRET is missing in .env!");
+      throw new Error("Server configuration error (JWT)");
     }
 
-    const user = await User.create({ name, email, mobile });
-
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "70d" });
     res.json({ token, user: { id: user._id, name, email: user.email, mobile, role: user.role } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("❌ Registration Error Detail:", {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      body: req.body
+    });
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern || {})[0] || "Unknown field";
+      return res.status(400).json({ error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists. Please use a different one.` });
+    }
+    res.status(500).json({
+      error: "Internal server error",
+      details: err.message,
+      type: err.name
+    });
   }
 });
 
-app.post("/api/auth/login-shop", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   try {
-    const { mobile } = req.body;
+    let { mobile } = req.body;
+    console.log("🔑 Login Attempt:", { original: req.body.mobile, processed: mobile });
     if (!mobile) return res.status(400).json({ error: "Mobile number is required" });
+
+    // Normalize mobile: Trim and remove spaces
+    mobile = mobile ? mobile.trim().replace(/\s+/g, "") : "";
+    console.log("🔑 Login Attempt (Processed):", mobile);
+
     const user = await User.findOne({ mobile });
-    if (!user) return res.status(400).json({ error: "User not found" });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    if (!user) return res.status(400).json({ error: "User not found. Please register first." });
+
+    // Auto-login with just mobile (Simplification as requested)
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "70d" });
     res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
   } catch (err) {
     res.status(500).json({ error: err.message });
