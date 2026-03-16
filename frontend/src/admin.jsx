@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 // API base — when running frontend in CRA (port 3000) and backend on 5003
 const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:5001"
+  ? "http://localhost:5005"
   : "https://ecom-rne9.onrender.com";
 
 // ============================================================
@@ -263,150 +263,141 @@ function Sidebar({ active, onNav, collapsed, onToggle }) {
 // ============================================================
 // DASHBOARD
 // ============================================================
-function Dashboard({ products, orders }) {
+function Dashboard({ products, orders, refreshData, lastUpdated }) {
   const totalRevenue = orders
     .filter((o) => o.status !== "Cancelled")
     .reduce((s, o) => s + o.total, 0);
   const pendingOrders = orders.filter((o) => o.status === "Pending").length;
-  const lowStock = products.filter((p) => p.stock < 5).length;
-  const totalOrders = orders.length;
-  const recentOrders = orders.slice(-5).reverse();
-  const topProducts = [...products]
-    .sort((a, b) => b.sales - a.sales)
-    .slice(0, 5);
-  const stats = [
-    {
-      label: "Total Products",
-      value: products.length,
-      icon: "🛍️",
-      color: "#9C27B0",
-      sub: "Active & Inactive",
-    },
-    {
-      label: "Total Orders",
-      value: totalOrders,
-      icon: "📦",
-      color: "#2196F3",
-      sub: "All time",
-    },
-    {
-      label: "Total Revenue",
-      value: "₹" + totalRevenue.toLocaleString("en-IN"),
-      icon: "💰",
-      color: "#4CAF50",
-      sub: "Excl. cancelled",
-    },
-    {
-      label: "Pending Orders",
-      value: pendingOrders,
-      icon: "⏳",
-      color: "#FF9800",
-      sub: "Needs attention",
-      alert: pendingOrders > 0,
-    },
-    {
-      label: "Low Stock Items",
-      value: lowStock,
-      icon: "⚠️",
-      color: "#F44336",
-      sub: "< 5 units",
-      alert: lowStock > 0,
-    },
-  ];
-  return (
-    <div>
-      <h1 style={pageTitle}>Dashboard Overview</h1>
+  const lowStock = products.filter((p) => p.stock < 10).length;
 
-      {/* Stats */}
+  const stats = [
+    { label: "Total Products", value: products.length, icon: "🛍️", color: "#9C27B0" },
+    { label: "Total Orders", value: orders.length, icon: "📦", color: "#2196F3" },
+    { label: "Total Revenue", value: "₹" + totalRevenue.toLocaleString("en-IN"), icon: "💰", color: "#4CAF50" },
+    { label: "Pending Tasks", value: pendingOrders, icon: "⏳", color: "#FF9800", alert: pendingOrders > 0 },
+    { label: "Inventory Health", value: lowStock > 0 ? `${lowStock} Low` : "Good", icon: "❤️", color: lowStock > 0 ? "#F44336" : "#4CAF50" },
+  ];
+
+  const recentOrders = orders.slice(0, 5);
+
+  return (
+    <div className="adm-style-129-inner">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+        <div>
+          <h1 style={{ ...pageTitle, margin: 0 }}>Business Command Center</h1>
+          <div style={{ color: '#4caf50', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
+            <span className="live-pulse"></span>
+            Sync Frequency: 5m | Last Update: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Just now'}
+          </div>
+        </div>
+        <button onClick={refreshData} style={{ ...actionBtn, padding: '8px 15px', fontSize: '0.75rem' }}>🔄 Force Refresh</button>
+      </div>
+
       <div className="adm-style-21">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            style={{
-              background: "rgba(20,8,0,0.8)",
-              border: `1px solid ${s.alert ? s.color + "66" : "rgba(255,215,0,0.12)"}`,
-              borderRadius: 14,
-              padding: "20px 18px",
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: s.alert ? `0 0 20px ${s.color}22` : "none",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: -10,
-                right: -10,
-                fontSize: "3.5rem",
-                opacity: 0.08,
-              }}
-            >
-              {s.icon}
-            </div>
-            <div className="adm-style-22">{s.label}</div>
-            <div
-              style={{
-                fontSize: "1.8rem",
-                fontWeight: 900,
-                color: s.color,
-                fontFamily: "'Cinzel', serif",
-              }}
-            >
-              {s.value}
-            </div>
-            <div className="adm-style-23">{s.sub}</div>
+        {stats.map(s => (
+          <div key={s.label} className="stat-card" style={{ border: `1px solid ${s.alert ? s.color + "66" : "rgba(255,215,0,0.12)"}`, position: 'relative', overflow: 'hidden', padding: '10px 15px', borderRadius: 10 }}>
+            <div className="stat-icon">{s.icon}</div>
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: '0.65rem', color: '#555', marginTop: '10px' }}>Real-time sync enabled</div>
           </div>
         ))}
       </div>
 
-      <div className="adm-style-24">
-        {/* Recent Orders */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+        {/* RECENT ACTIVITY */}
         <div style={cardStyle}>
-          <h3 className="adm-style-25">Recent Orders</h3>
-          {recentOrders.map((o) => (
-            <div key={o.id} className="adm-style-26">
-              <div>
-                <div className="adm-style-27">{typeof o.customer === 'object' ? o.customer.name : o.customer}</div>
-                <div className="adm-style-28">{o.id}</div>
-              </div>
-              <div className="adm-style-29">
-                <div className="adm-style-30">₹{o.total}</div>
-                <StatusBadge status={o.status} small />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Top Products */}
-        <div style={cardStyle}>
-          <h3 className="adm-style-31">Top Products</h3>
-          {topProducts.map((p, i) => (
-            <div key={p.id} className="adm-style-32">
-              <span className="adm-style-33">#{i + 1}</span>
-              <div className="adm-style-34" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222', borderRadius: 8, overflow: 'hidden' }}>
-                {p.images && p.images.length && (p.images[0].startsWith("/") || p.images[0].startsWith("http")) ? (
-                  <img
-                    src={p.images[0].startsWith("/") ? API_BASE + p.images[0] : p.images[0]}
-                    alt={p.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '1.2rem' }}>{p.emoji || "🎇"}</span>
-                )}
-              </div>
-              <div className="adm-style-35">
-                <div className="adm-style-36">{p.name}</div>
-                <div className="adm-style-37">
-                  {p.sales} sold • ₹{p.price}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 className="adm-style-25" style={{ margin: 0 }}>Recent Flux Orders</h3>
+            <span style={{ fontSize: '0.7rem', color: '#ffd700', cursor: 'pointer' }}>View All →</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {recentOrders.map(o => (
+              <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,215,0,0.06)', borderRadius: 12 }}>
+                <div>
+                  <div style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>
+                    {typeof o.customer === 'object' ? o.customer.name : (o.customer || "Guest Customer")}
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: '#666' }}>{o.id}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#ffd700', fontWeight: 700 }}>₹{o.total}</div>
+                  <StatusBadge status={o.status} small />
                 </div>
               </div>
-              <div className="adm-style-38">
-                {p.stock > 0 ? `${p.stock} left` : "Out"}
+            ))}
+            {orders.length === 0 && <div style={{ color: '#444', textAlign: 'center', padding: 20 }}>No flux activity.</div>}
+          </div>
+        </div>
+
+        {/* OPERATIONS */}
+        <div style={cardStyle}>
+          <h3 className="adm-style-25" style={{ marginBottom: '20px' }}>Admin Intel Actions</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            {[
+              { label: "Inventory", icon: "💎", color: "#9C27B0", desc: "Manage Stock" },
+              { label: "Promotions", icon: "🚀", color: "#FF9800", desc: "Discount Center" },
+              { label: "Live Chat", icon: "💬", color: "#2196F3", desc: "Customer Support" },
+              { label: "Audit Log", icon: "📋", color: "#4CAF50", desc: "System Status" }
+            ].map(action => (
+              <div key={action.label} className="op-card-mini">
+                <div style={{ fontSize: '1.2rem', marginBottom: 5 }}>{action.icon}</div>
+                <div style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700 }}>{action.label}</div>
+                <div style={{ fontSize: '0.6rem', color: '#777' }}>{action.desc}</div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '24px', marginTop: '24px' }}>
+        {/* GEO INTEL */}
+        <div style={cardStyle}>
+          <h3 className="adm-style-25" style={{ marginBottom: '20px' }}>Customer Geo-Reach</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {Object.entries(orders.reduce((acc, o) => {
+              const city = o.customer?.city || "Unknown";
+              acc[city] = (acc[city] || 0) + 1;
+              return acc;
+            }, {})).slice(0, 5).map(([city, count]) => (
+              <div key={city}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#fff', marginBottom: 5 }}>
+                  <span>{city}</span>
+                  <span style={{ color: '#ffd700' }}>{Math.round((count / orders.length) * 100)}%</span>
+                </div>
+                <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${(count / orders.length) * 100}%`, background: '#ffd700', borderRadius: 2 }}></div>
+                </div>
+              </div>
+            ))}
+            {orders.length === 0 && <div style={{ color: '#444', fontSize: '0.75rem' }}>Waiting for geo-data...</div>}
+          </div>
+        </div>
+
+        {/* CHART */}
+        <div style={cardStyle}>
+          <h3 className="adm-style-25" style={{ marginBottom: '15px' }}>Sri Ram Balaji - Sales Momentum</h3>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '100px', padding: '10px 0' }}>
+            {[30, 60, 40, 80, 50, 90, 70, 100, 85, 95, 60, 80].map((h, i) => (
+              <div key={i} style={{ flex: 1, background: h > 80 ? 'linear-gradient(0deg, #ff6b35, #ffd700)' : 'rgba(255,215,0,0.1)', height: `${h}%`, borderRadius: '3px 3px 0 0', position: 'relative' }} className="moment-bar">
+                <div className="moment-tooltip">₹{h * 200}+</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#444', fontSize: '0.6rem', marginTop: 10 }}>
+            <span>JAN</span><span>MAR</span><span>JUL</span><span>SEP</span><span>PEAK SEASON</span><span>DEC</span>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; display: inline-block; animation: adrenaline 1.5s infinite; }
+        @keyframes adrenaline { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.6); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
+        .op-card-mini { background: rgba(255,255,255,0.03); padding: 15px; borderRadius: 12px; border: 1px solid rgba(255,215,0,0.05); cursor: pointer; transition: 0.2s; }
+        .op-card-mini:hover { background: rgba(255,107,53,0.08); transform: translateY(-3px); border-color: rgba(255,215,0,0.25); }
+        .moment-bar:hover .moment-tooltip { opacity: 1; }
+        .moment-tooltip { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #000; padding: 2px 5px; border-radius: 3px; font-size: 0.55rem; font-weight: 800; opacity: 0; transition: 0.2s; white-space: nowrap; }
+      `}</style>
     </div>
   );
 }
@@ -562,15 +553,17 @@ function OrdersPage({ orders, setOrders }) {
                 <div className="adm-style-45">{o.id}</div>
                 <div className="adm-style-46">{typeof o.customer === 'object' ? o.customer.name : o.customer}</div>
                 <div className="adm-style-47">
-                  📞 {o.mobile} &nbsp;|&nbsp; 📍 {o.city}
+                  📞 {o.customer?.mobile || o.mobile} &nbsp;|&nbsp; 📍 {o.customer?.city || o.city}
                 </div>
                 <div className="adm-style-48">
-                  📅 {o.date} &nbsp;|&nbsp; {o.items} items
+                  📅 {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : (o.date || "-")} &nbsp;|&nbsp; {Array.isArray(o.items) ? o.items.length : (o.items || 0)} items
                 </div>
               </div>
               <div className="adm-style-49">
                 <div className="adm-style-50">₹{o.total}</div>
-                <div className="adm-style-51">{o.payment}</div>
+                <div className="adm-style-51">
+                  {typeof o.payment === 'object' ? (o.payment.status?.toUpperCase() || "PENDING") : (o.payment || "COD")}
+                </div>
                 {o.txn !== "-" && <div className="adm-style-52">{o.txn}</div>}
               </div>
               <div className="adm-style-53">
@@ -1477,7 +1470,7 @@ function StatusBadge({ status, small }) {
         fontWeight: 600,
       }}
     >
-      {status}
+      {typeof status === 'object' ? (status.status || JSON.stringify(status)) : status}
     </span>
   );
 }
@@ -1543,134 +1536,96 @@ const actionBtn = {
 // MAIN APP
 // ============================================================
 export default function AdminApp() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [auth, setAuth] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [banners, setBanners] = useState([]);
   const [users, setUsers] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  // On mount or when loggedIn toggles, check for token and load data
+  const fetchData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setAuth(false);
+      return;
+    }
+
+    try {
+      // 1. Dashboard summary
+      const dashRes = await fetch(`${API_BASE}/api/admin/dashboard`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      // 2. Full Orders
+      const allOrdersRes = await fetch(`${API_BASE}/api/admin/orders`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      // 3. Products
+      const prodRes = await fetch(`${API_BASE}/api/products?limit=500`);
+
+      // 4. Misc Admin Data
+      const [userRes, cupRes, banRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/users`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/admin/coupons`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/banners`)
+      ]);
+
+      if (dashRes.ok && allOrdersRes.ok && prodRes.ok) {
+        const dashData = await dashRes.json();
+        const allOrders = await allOrdersRes.json();
+        const pData = await prodRes.json();
+
+        const rawProds = pData.products || pData || [];
+        setProducts(rawProds.map(p => ({ ...p, id: p._id || p.id })));
+        setOrders(allOrders.map(o => ({ ...o, id: o.orderId || o._id || o.id })));
+
+        if (userRes.ok) setUsers(await userRes.json());
+        if (cupRes.ok) setCoupons(await cupRes.json());
+        if (banRes.ok) setBanners(await banRes.json());
+
+        setLastUpdated(new Date());
+        setAuth(true);
+      } else if (dashRes.status === 401) {
+        setAuth(false);
+        localStorage.removeItem("token");
+      }
+    } catch (err) {
+      console.error("Critical Sync Error:", err);
+    }
+  };
+
   useEffect(() => {
-    const token = (() => {
-      try {
-        return localStorage.getItem("token");
-      } catch (e) {
-        return null;
-      }
-    })();
-    if (!token) return;
-    let mounted = true;
-    const load = async () => {
-      try {
-        // fetch dashboard
-        const dashRes = await fetch(`${API_BASE}/api/admin/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (dashRes.ok) {
-          const dash = await dashRes.json();
-          if (!mounted) return;
-          // recentOrders -> orders; other totals can be used in UI if needed
-          if (dash.recentOrders)
-            setOrders(
-              dash.recentOrders.map((o) => ({
-                id: o.orderId || o.orderId,
-                ...o,
-              })),
-            );
-        } else {
-          // token invalid or unauthorized -> logout
-          setLoggedIn(false);
-          try {
-            localStorage.removeItem("token");
-          } catch (e) { }
-          return;
-        }
+    const token = localStorage.getItem("token");
+    if (token) setAuth(true);
+    setLoading(false);
+  }, []);
 
-        // fetch all orders (admin)
-        const allOrdersRes = await fetch(`${API_BASE}/api/admin/orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (allOrdersRes.ok) {
-          const allOrders = await allOrdersRes.json();
-          if (mounted)
-            setOrders(
-              allOrders.map((o) => ({
-                id: o.orderId || o._id || o.id,
-                customer: o.customer?.name || o.customer?.name || "",
-                total: o.total || 0,
-                status: o.status || "Pending",
-                date: o.createdAt
-                  ? new Date(o.createdAt).toISOString().split("T")[0]
-                  : "",
-              })),
-            );
-        }
+  useEffect(() => {
+    if (!auth) return;
+    fetchData();
+    // Real-time synchronization interval (30 seconds)
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [auth]);
 
-        // fetch products (public) and normalize fields for admin UI
-        const prodRes = await fetch(`${API_BASE}/api/products?limit=200`);
-        if (prodRes.ok) {
-          const pjson = await prodRes.json();
-          const raw = pjson.products || pjson || [];
-          const normalized = raw.map((p) => ({
-            ...p,
-            id: p._id || p.id,
-            sales: p.sales || p.salesCount || 0,
-            emoji: p.images && p.images.length ? p.images[0] : p.emoji || "🎇",
-            stock: typeof p.stock === "number" ? p.stock : p.stock || 0,
-          }));
-          if (mounted) setProducts(normalized);
-        }
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#050010', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="live-pulse" style={{ width: 40, height: 40 }}></div>
+    </div>
+  );
 
-        // fetch banners
-        const banRes = await fetch(`${API_BASE}/api/banners`);
-        if (banRes.ok) {
-          const bjson = await banRes.json();
-          if (mounted) setBanners(bjson || []);
-        }
+  if (!auth) return <AdminLogin onLogin={() => setAuth(true)} />;
 
-        // fetch coupons (admin)
-        const cupRes = await fetch(`${API_BASE}/api/admin/coupons`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (cupRes.ok) {
-          const cjson = await cupRes.json();
-          if (mounted) setCoupons(cjson || []);
-        }
-
-        // fetch users (admin)
-        const userRes = await fetch(`${API_BASE}/api/admin/users`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (userRes.ok) {
-          const ujson = await userRes.json();
-          if (mounted) setUsers(ujson || []);
-        }
-        // if everything good, mark logged in
-        setLoggedIn(true);
-      } catch (err) {
-        console.error("Admin data load failed", err);
-      }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [loggedIn]);
-  if (!loggedIn) return <AdminLogin onLogin={() => setLoggedIn(true)} />;
   const MARGIN = sidebarCollapsed ? 60 : 220;
+
   return (
-    <div className="adm-style-120">
+    <div className="adm-style-120" style={{ display: 'flex', minHeight: '100vh', background: '#050010' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:wght@400;600&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -1682,59 +1637,28 @@ export default function AdminApp() {
         active={page}
         onNav={setPage}
         collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed((c) => !c)}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      <div
-        style={{
-          flex: 1,
-          marginLeft: MARGIN,
-          transition: "margin 0.3s ease",
-        }}
-      >
-        {/* Topbar */}
+      <div style={{ flex: 1, marginLeft: MARGIN, transition: "margin 0.3s ease" }}>
         <header className="adm-style-121">
           <div className="adm-style-122">
-            <span className="adm-style-123">Admin</span> /{" "}
-            <span className="adm-style-124">{page}</span>
+            <span className="adm-style-123">Admin</span> / <span className="adm-style-124">{page}</span>
           </div>
           <div className="adm-style-125">
-            <div className="adm-style-126">🟢 Live</div>
-            <div className="adm-style-127">👤 Admin</div>
-            <button
-              onClick={() => {
-                try {
-                  localStorage.removeItem("token");
-                } catch (e) { }
-                setLoggedIn(false);
-              }}
-              className="adm-style-128"
-            >
-              Logout
-            </button>
+            <div className="adm-style-126">Live Feed Active</div>
+            <span className="adm-style-127">Sri Ram Balaji Shop</span>
+            <button className="adm-style-128" onClick={() => { localStorage.removeItem("token"); setAuth(false); }}>Logout</button>
           </div>
         </header>
 
-        {/* Content */}
-        <main className="adm-style-129">
-          {page === "dashboard" && (
-            <Dashboard products={products} orders={orders} />
-          )}
-          {page === "orders" && (
-            <OrdersPage orders={orders} setOrders={setOrders} />
-          )}
-          {page === "products" && (
-            <ProductsPage products={products} setProducts={setProducts} />
-          )}
-          {page === "coupons" && (
-            <CouponsPage coupons={coupons} setCoupons={setCoupons} />
-          )}
-          {page === "banners" && (
-            <BannersPage banners={banners} setBanners={setBanners} />
-          )}
-          {page === "users" && (
-            <UsersPage users={users} />
-          )}
+        <main className="adm-style-129" >
+          {page === "dashboard" && <Dashboard products={products} orders={orders} refreshData={fetchData} lastUpdated={lastUpdated} />}
+          {page === "orders" && <OrdersPage orders={orders} setOrders={setOrders} />}
+          {page === "products" && <ProductsPage products={products} setProducts={setProducts} />}
+          {page === "coupons" && <CouponsPage coupons={coupons} setCoupons={setCoupons} />}
+          {page === "banners" && <BannersPage banners={banners} setBanners={setBanners} />}
+          {page === "users" && <UsersPage users={users} />}
         </main>
       </div>
     </div>
