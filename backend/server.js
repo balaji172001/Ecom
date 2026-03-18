@@ -27,13 +27,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ============================================================
-// DATABASE CONNECTION
+// DATABASE CONNECTION & READY STATE
 // ============================================================
+let isReady = false;
+
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/sivakasicracker", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}).then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB error:", err));
+}).then(() => {
+  console.log("✅ MongoDB connected");
+  isReady = true;
+}).catch(err => {
+  console.error("❌ MongoDB error:", err);
+  // We keep isReady false if DB fails, so health checks reflect unreadiness
+});
 
 // ============================================================
 // SCHEMAS & MODELS
@@ -578,10 +585,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || "Internal server error" });
 });
 
-// Health endpoint — shows server + DB connection status
-app.get('/api/health', async (req, res) => {
-  const mongooseState = mongoose.connection.readyState; // 0 = disconnected, 1 = connected
-  res.json({ ok: true, dbState: mongooseState });
+// Lightweight health endpoint for Render/Cron — no DB queries
+app.get('/api/health', (req, res) => {
+  if (!isReady) {
+    return res.status(503).json({ ok: false, status: "starting" });
+  }
+  res.json({ ok: true, status: "ready" });
 });
 
 // ============================================================
@@ -608,6 +617,29 @@ const startServer = (port) => {
     }
   });
 };
+
+// ============================================================
+// SELF-PINGING (KEEP ALIVE)
+// ============================================================
+// Automatically pings this service every 5 minutes to stay awake on Render.
+// We use the full public URL so it counts as incoming traffic.
+const selfPing = () => {
+  const URL = process.env.API_URL || "https://ecom-rne9.onrender.com";
+  if (!URL) return;
+
+  require("https").get(`${URL}/api/health`, (res) => {
+    console.log(`[Self-Ping] Status: ${res.statusCode}`);
+  }).on("error", (err) => {
+    console.error(`[Self-Ping] Error: ${err.message}`);
+  });
+};
+
+// Start self-pinging every 5 minutes after server start
+const FIVE_MINUTES = 5 * 60 * 1000;
+setTimeout(() => {
+  selfPing();
+  setInterval(selfPing, FIVE_MINUTES);
+}, 30000); // 30s delay to allow initial startup
 
 startServer(tryPort);
 
