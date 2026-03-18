@@ -1790,7 +1790,7 @@ export default function ShopApp() {
           </div>
           <div>
             <div className="idx-style-262">Why Choose Us</div>
-            {["✅ Licensed & Certified Products", "🏷️ Upto 50% Discount", "🚀 Pan-India Delivery", "🔒 Secure Razorpay Payments", "📦 Safe Packaging", "📞 24×7 Support"].map(i => <div key={i} className="idx-style-263">
+            {["✅ Licensed & Certified Products", "🏷️ Upto 50% Discount", "🚀 Pan-India Delivery", "🔒 Secure Payments", "📦 Safe Packaging", "📞 24×7 Support"].map(i => <div key={i} className="idx-style-263">
               {i}
             </div>)}
           </div>
