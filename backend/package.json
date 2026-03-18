@@ -6,7 +6,8 @@
     "start": "node server.js",
     "setup": "node scripts/setup.js",
     "seed:products": "node scripts/seed-products.js",
-    "seed:orders": "node scripts/seed-orders.js"
+    "seed:orders": "node scripts/seed-orders.js",
+    "cron:ping": "node scripts/cron-ping.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
