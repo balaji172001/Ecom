@@ -152,7 +152,7 @@ function renderImage(img, className) {
   if (typeof img !== 'string') return img;
   if (img.startsWith("/") || img.startsWith("http")) {
     const src = img.startsWith("/") ? `${API_BASE}${img}` : img;
-    return <img src={src} alt="product" className={className} style={{ width: "100%", height: "100%", objectFit: "contain" }} />;
+    return <img src={src} alt="product" className={className} style={{ width: "100%", height: "100%" }} />;
   }
   return img;
 }
@@ -772,7 +772,12 @@ function ProductDetailPage({
             background: imgIdx === i ? "rgba(255,215,0,0.18)" : "rgba(255,255,255,0.04)",
             border: `2px solid ${imgIdx === i ? "#FFD700" : "rgba(255,215,0,0.15)"}`,
             borderRadius: 10,
-            padding: "8px 14px",
+            padding: "8px",
+            width: "64px",
+            height: "64px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             cursor: "pointer",
             fontSize: "1.4rem"
           }}>
@@ -1513,41 +1518,92 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
 }
 
 // ============================================================
-// APK DOWNLOAD POPUP
+// APP WALKTHROUGH
 // ============================================================
-function APKPopup() {
+function Walkthrough() {
   const [show, setShow] = useState(false);
+  const [step, setStep] = useState(0);
+
+  const steps = [
+    {
+      emoji: "🎇",
+      title: "Welcome to Sri Ram Balaji!",
+      text: "Premium Quality Fireworks for your grand celebrations. Explore our Price List 2025!"
+    },
+    {
+      emoji: "🛍️",
+      title: "Easy Browsing",
+      text: "Filter by categories and search for your favorite crackers easily."
+    },
+    {
+      emoji: "🛒",
+      title: "Smart Shopping",
+      text: "Add items to your cart and see the best discounts applied instantly."
+    },
+    {
+      emoji: "📱",
+      title: "Order on WhatsApp",
+      text: "Finalize your order and send it directly via WhatsApp for quick confirmation!"
+    }
+  ];
+
   useEffect(() => {
-    const shown = sessionStorage.getItem("apk_popup_shown");
+    const shown = localStorage.getItem("walkthrough_shown");
     if (!shown) {
       const timer = setTimeout(() => setShow(true), 500);
       return () => clearTimeout(timer);
     }
+  }, []);
+
+  useEffect(() => {
     if (show) {
       document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
     }
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [show]);
+
   const close = () => {
     setShow(false);
-    sessionStorage.setItem("apk_popup_shown", "true");
+    localStorage.setItem("walkthrough_shown", "true");
   };
+
+  const next = () => {
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      close();
+    }
+  };
+
   if (!show) return null;
+
   return (
-    <div className="apk-popup-overlay">
-      <div className="apk-popup-card">
-        <button className="apk-popup-close" onClick={close}>✕</button>
-        <div className="apk-icon">📱</div>
-        <h2 className="apk-popup-title">Download App</h2>
-        <p className="apk-popup-text">
-          Experience Sri Ram Balaji Agency on your phone. If APK needed, please download only for Android only.
-        </p>
-        <a href="/app-debug.apk" download className="apk-download-btn" onClick={close}>
-          Download APK
-        </a>
-        <div className="apk-note">⚠️ Supports Android Only</div>
+    <div className="walkthrough-overlay">
+      <div className="walkthrough-card">
+        <button className="walkthrough-skip" onClick={close}>Skip</button>
+        <div className="walkthrough-content">
+          <div className="walkthrough-emoji">{steps[step].emoji}</div>
+          <h2 className="walkthrough-title">{steps[step].title}</h2>
+          <p className="walkthrough-text">{steps[step].text}</p>
+        </div>
+
+        <div className="walkthrough-footer">
+          <div className="walkthrough-dots">
+            {steps.map((_, i) => (
+              <div
+                key={i}
+                className={`walkthrough-dot ${i === step ? 'active' : ''}`}
+              />
+            ))}
+          </div>
+          <button className="walkthrough-next" onClick={next}>
+            {step === steps.length - 1 ? "Get Started" : "Next →"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1790,7 +1846,7 @@ export default function ShopApp() {
           </div>
           <div>
             <div className="idx-style-262">Why Choose Us</div>
-            {["✅ Licensed & Certified Products", "🏷️ Upto 50% Discount", "🚀 Pan-India Delivery", "🔒 Secure Razorpay Payments", "📦 Safe Packaging", "📞 24×7 Support"].map(i => <div key={i} className="idx-style-263">
+            {["✅ Licensed & Certified Products", "🏷️ Upto 50% Discount", "🚀 Pan-India Delivery", "🔒 Secure Payments", "📦 Safe Packaging", "📞 24×7 Support"].map(i => <div key={i} className="idx-style-263">
               {i}
             </div>)}
           </div>
@@ -1812,7 +1868,7 @@ export default function ShopApp() {
 
     {/* AUTH MODALS — appear as overlay, don't navigate away */}
 
-    <APKPopup />
+    <Walkthrough />
     {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
   </div>;
 }
