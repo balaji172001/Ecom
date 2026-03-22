@@ -1292,11 +1292,19 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
       }}>
         <h3 className="idx-style-185">Order ({cart.length})</h3>
         <div className="idx-style-186">
-          {cart.map(i => <div key={i.id} className="idx-style-187">
-            <span className="idx-style-188">
-              {i.image} {i.name} ×{i.qty}
-            </span>
-            <span className="idx-style-189">
+          {cart.map(i => <div key={i.id} className="idx-style-187" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {renderImage(i.image, "idx-style-187-img")}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="idx-style-188" style={{ fontSize: '0.85rem', color: '#fff' }}>
+                {i.name}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                ₹{i.price.toLocaleString("en-IN")} × {i.qty}
+              </div>
+            </div>
+            <span className="idx-style-189" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
               ₹{(i.price * i.qty).toLocaleString("en-IN")}
             </span>
           </div>)}
@@ -1459,6 +1467,23 @@ function OrdersPage({ orders, token }) {
           <div className="idx-style-234">Placed on {new Date(o.createdAt || Date.now()).toLocaleDateString("en-IN")}</div>
           <div className="idx-style-235">📍 {o.customer?.address || o.address}, {o.customer?.city || o.city}</div>
           <div className="idx-style-236">📅 Status: {o.status || "Confirmed"} • {o.items?.length || 0} items</div>
+          <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 5 }}>
+            Subtotal: ₹{o.subtotal?.toLocaleString("en-IN")} &nbsp;|&nbsp;
+            Delivery: ₹{o.deliveryCharge?.toLocaleString("en-IN")}
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {Array.isArray(o.items) && o.items.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                 <div style={{ width: 32, height: 32, borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
+                    {renderImage(item.image, "idx-order-item-img")}
+                 </div>
+                 <div style={{ flex: 1, fontSize: '0.78rem', color: '#ccc' }}>
+                    {item.name} <span style={{ color: '#666' }}>× {item.qty}</span>
+                 </div>
+                 <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</div>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="idx-style-237">
           <div className="idx-style-238">₹{o.total?.toLocaleString("en-IN")}</div>

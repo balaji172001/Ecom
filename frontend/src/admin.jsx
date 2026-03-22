@@ -38,6 +38,16 @@ const STATUS_COLORS = {
 };
 const STATUSES = ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"];
 
+function renderImage(img, className) {
+  if (!img) return "🎇";
+  if (typeof img !== 'string') return img;
+  if (img.startsWith("/") || img.startsWith("http")) {
+    const src = img.startsWith("/") ? `${API_BASE}${img}` : img;
+    return <img src={src} alt="product" className={className} style={{ width: "100%", height: "100%", objectFit: 'contain' }} />;
+  }
+  return img;
+}
+
 // ============================================================
 // ADMIN LOGIN
 // ============================================================
@@ -558,6 +568,20 @@ function OrdersPage({ orders, setOrders }) {
                 <div className="adm-style-48">
                   📅 {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : (o.date || "-")} &nbsp;|&nbsp; {Array.isArray(o.items) ? o.items.length : (o.items || 0)} items
                 </div>
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {Array.isArray(o.items) && o.items.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
+                       <div style={{ width: 36, height: 36, borderRadius: 6, overflow: 'hidden', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
+                          {renderImage(item.image || (item.images && item.images[0]), "adm-item-img")}
+                       </div>
+                       <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>{item.name}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#666' }}>₹{item.price} × {item.qty}</div>
+                       </div>
+                       <div style={{ fontSize: '0.8rem', color: '#ffd700', fontWeight: 700 }}>₹{((item.price || 0) * (item.qty || 1)).toLocaleString("en-IN")}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="adm-style-49">
                 <div className="adm-style-50">₹{o.total}</div>
@@ -922,16 +946,7 @@ function ProductsPage({ products, setProducts }) {
               <div className="adm-style-62">LOW STOCK</div>
             )}
             <div className="adm-style-63">
-              {p.images && p.images.length && (p.images[0].startsWith("/") || p.images[0].startsWith("http")) ? (
-                <img
-                  src={p.images[0].startsWith("/") ? API_BASE + p.images[0] : p.images[0]}
-                  alt={p.name}
-                  className="adm-style-64"
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
-              ) : (
-                p.emoji || "🎇"
-              )}
+              {renderImage(p.images && p.images.length ? p.images[0] : (p.image || p.emoji), "adm-style-64")}
             </div>
             <div className="adm-style-65">{p.category}</div>
             <h3 className="adm-style-66">{p.name}</h3>
