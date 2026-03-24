@@ -333,7 +333,12 @@
   padding: 80px 20px 40px;
   z-index: 1;
   position: relative;
-}
+  background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('./assets/hero-bg.png');
+  background-size: auto;
+  background-position: center;
+  background-attachment: fixed;
+} 
+
 
 .idx-style-45 {
   animation: float 3s ease-in-out infinite;
@@ -1949,4 +1954,56 @@
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
+}
+
+/* CONNECT WITH US SECTION */
+.social-connect-root {
+  background: rgba(255, 215, 0, 0.03);
+  border-radius: 24px;
+  padding: 60px 20px;
+  margin: 40px auto;
+  max-width: 1200px;
+  width: 95%;
+}
+
+.social-grid-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.social-link-card {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  transition: all 0.3s ease;
+}
+
+.social-link-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 215, 0, 0.5) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.social-link-icon-box {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+}
+
+.social-link-title-text {
+  color: #ffd700;
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  font-family: 'Cinzel', serif;
+}
+
+.social-link-subtitle-text {
+  color: #aaa;
+  font-size: 0.9rem;
 }
