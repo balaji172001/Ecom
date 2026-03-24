@@ -463,6 +463,24 @@ function HomePage({
         </div>
       </section>
     )}
+    {/* CONNECT WITH US */}
+    <section key="social-connect" className="social-connect-root" style={sectionStyle}>
+      <SectionTitle icon="📱" title="Connect With Us" sub="Stay updated with our latest collections & offers" />
+      <div className="social-grid-wrapper">
+        <a href="https://www.instagram.com/sri_rambalaji" target="_blank" rel="noreferrer" className="social-link-card" style={cardStyle}>
+          <div className="social-link-icon-box">📸</div>
+          <h3 className="social-link-title-text">@sri_rambalaji</h3>
+          <p className="social-link-subtitle-text">Instagram Official</p>
+        </a>
+        <a href="https://www.youtube.com/@srirambalajiagency2224" target="_blank" rel="noreferrer" className="social-link-card" style={cardStyle}>
+          <div className="social-link-icon-box">▶️</div>
+          <h3 className="social-link-title-text">Sri Ram Balaji Agency</h3>
+          <p className="social-link-subtitle-text">YouTube Official Channel</p>
+        </a>
+      </div>
+    </section>
+    
+
 
 
 
