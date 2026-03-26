@@ -212,7 +212,9 @@ const cardStyle = {
 const sectionStyle = {
   padding: "60px 20px",
   maxWidth: 1200,
-  margin: "0 auto"
+  margin: "0 auto",
+  width: "100%",
+  boxSizing: "border-box"
 };
 const inputStyle = {
   width: "100%",
@@ -551,9 +553,9 @@ function HomePage({
       ...sectionStyle,
       background: "rgba(255,50,0,0.05)",
       borderRadius: 20,
-      margin: "0 0px 0px",
+      margin: "0 auto",
       width: "100%",
-      maxWidth: "unset !important"
+      maxWidth: "100%"
     }}>
       <SectionTitle icon="⚠️" title="Safety Instructions" sub="Always follow these guidelines before using crackers" />
       <div className="idx-style-70">
@@ -1810,6 +1812,8 @@ export default function ShopApp() {
     <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { overflow-x: hidden; width: 100%; position: relative; }
+
         ::-webkit-scrollbar { width:5px; }
         ::-webkit-scrollbar-track { background:#080018; }
         ::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.22); border-radius:3px; }
