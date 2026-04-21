@@ -1,5 +1,12 @@
 import "./admin.css";
 import { useState, useEffect } from "react";
+import { 
+  LayoutDashboard, ShoppingBag, Package, Tag, Image as ImageIcon, Users, 
+  Search, Lock, LogOut, Menu, IndianRupee, Clock, Heart, 
+  AlertCircle, ClipboardList, Diamond, Zap, MessageSquare, 
+  Download, Calendar, MapPin, Phone, CheckCircle, XCircle, 
+  Trash2, Edit, Plus, ArrowRight, RefreshCw, BarChart3, TrendingUp, Star, MessageCircle
+} from "lucide-react";
 
 // API base — when running frontend in CRA (port 3000) and backend on 5003
 const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -129,9 +136,9 @@ function AdminLogin({ onLogin }) {
 
       <div className="adm-style-3">
         <div className="adm-style-4">
-          <div className="adm-style-5">🔐</div>
+          <div className="adm-style-5"><Lock size={48} color="#FFD700" /></div>
           <h1 className="adm-style-6">Admin Portal</h1>
-          <p className="adm-style-7">Sri Ram Ballaji Agency Management</p>
+          <p className="adm-style-7">Sri Ram Balaji Agency Management</p>
         </div>
 
         <div className="adm-style-8">
@@ -189,12 +196,12 @@ function AdminLogin({ onLogin }) {
 // ============================================================
 function Sidebar({ active, onNav, collapsed, onToggle }) {
   const items = [
-    ["dashboard", "📊", "Dashboard"],
-    ["orders", "📦", "Orders"],
-    ["products", "🛍️", "Products"],
-    ["coupons", "🏷️", "Coupons"],
-    ["banners", "🖼️", "Banners"],
-    ["users", "👥", "Users"],
+    ["dashboard", <LayoutDashboard size={18} />, "Dashboard"],
+    ["orders", <Package size={18} />, "Orders"],
+    ["products", <ShoppingBag size={18} />, "Products"],
+    ["coupons", <Tag size={18} />, "Coupons"],
+    ["banners", <ImageIcon size={18} />, "Banners"],
+    ["users", <Users size={18} />, "Users"],
   ];
   return (
     <aside
@@ -229,7 +236,7 @@ function Sidebar({ active, onNav, collapsed, onToggle }) {
           </div>
         )}
         <button onClick={onToggle} className="adm-style-18">
-          ☰
+          <Menu size={20} />
         </button>
       </div>
       <nav className="adm-style-19">
@@ -273,7 +280,7 @@ function Sidebar({ active, onNav, collapsed, onToggle }) {
 // ============================================================
 // DASHBOARD
 // ============================================================
-function Dashboard({ products, orders, refreshData, lastUpdated }) {
+function Dashboard({ products, orders, refreshData, lastUpdated, onNav }) {
   const totalRevenue = orders
     .filter((o) => o.status !== "Cancelled")
     .reduce((s, o) => s + o.total, 0);
@@ -281,14 +288,40 @@ function Dashboard({ products, orders, refreshData, lastUpdated }) {
   const lowStock = products.filter((p) => p.stock < 10).length;
 
   const stats = [
-    { label: "Total Products", value: products.length, icon: "🛍️", color: "#9C27B0" },
-    { label: "Total Orders", value: orders.length, icon: "📦", color: "#2196F3" },
-    { label: "Total Revenue", value: "₹" + totalRevenue.toLocaleString("en-IN"), icon: "💰", color: "#4CAF50" },
-    { label: "Pending Tasks", value: pendingOrders, icon: "⏳", color: "#FF9800", alert: pendingOrders > 0 },
-    { label: "Inventory Health", value: lowStock > 0 ? `${lowStock} Low` : "Good", icon: "❤️", color: lowStock > 0 ? "#F44336" : "#4CAF50" },
+    { label: "Total Products", value: products.length, icon: <ShoppingBag size={20} />, color: "#9C27B0" },
+    { label: "Total Orders", value: orders.length, icon: <Package size={20} />, color: "#2196F3" },
+    { label: "Total Revenue", value: "₹" + totalRevenue.toLocaleString("en-IN"), icon: <IndianRupee size={20} />, color: "#4CAF50" },
+    { label: "Pending Tasks", value: pendingOrders, icon: <Clock size={20} />, color: "#FF9800", alert: pendingOrders > 0 },
+    { label: "Inventory Health", value: lowStock > 0 ? `${lowStock} Low` : "Good", icon: <Heart size={20} />, color: lowStock > 0 ? "#F44336" : "#4CAF50" },
   ];
 
-  const recentOrders = orders.slice(0, 5);
+  const recentOrders = [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  
+  const aov = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
+  const cityCounts = orders.reduce((acc, o) => {
+    const city = (typeof o.customer === 'object' ? o.customer.city : o.city) || "Unknown";
+    acc[city] = (acc[city] || 0) + 1;
+    return acc;
+  }, {});
+  const topCity = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  
+  const repeatCustomers = orders.reduce((acc, o) => {
+    const mob = (typeof o.customer === 'object' ? o.customer.mobile : o.mobile);
+    if (!mob) return acc;
+    acc[mob] = (acc[mob] || 0) + 1;
+    return acc;
+  }, {});
+  const loyaltyCount = Object.values(repeatCustomers).filter(v => v > 1).length;
+
+  const ltvData = Object.entries(orders.reduce((acc, o) => {
+    const mob = typeof o.customer === 'object' ? o.customer.mobile : o.mobile;
+    const name = typeof o.customer === 'object' ? o.customer.name : (o.customer || "Guest");
+    if (!mob) return acc;
+    if (!acc[mob]) acc[mob] = { name, total: 0, count: 0, mobile: mob };
+    acc[mob].total += o.total;
+    acc[mob].count += 1;
+    return acc;
+  }, {})).sort((a, b) => b[1].total - a[1].total).slice(0, 5).map(x => x[1]);
 
   return (
     <div className="adm-style-129-inner">
@@ -300,7 +333,9 @@ function Dashboard({ products, orders, refreshData, lastUpdated }) {
             Sync Frequency: 5m | Last Update: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Just now'}
           </div>
         </div>
-        <button onClick={refreshData} style={{ ...actionBtn, padding: '8px 15px', fontSize: '0.75rem' }}>🔄 Force Refresh</button>
+        <button onClick={refreshData} style={{ ...actionBtn, padding: '8px 15px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <RefreshCw size={14} /> Force Refresh
+        </button>
       </div>
 
       <div className="adm-style-21">
@@ -314,12 +349,14 @@ function Dashboard({ products, orders, refreshData, lastUpdated }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: '24px', marginTop: '24px' }}>
         {/* RECENT ACTIVITY */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 className="adm-style-25" style={{ margin: 0 }}>Recent Flux Orders</h3>
-            <span style={{ fontSize: '0.7rem', color: '#ffd700', cursor: 'pointer' }}>View All →</span>
+            <span style={{ fontSize: '0.7rem', color: '#ffd700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }} onClick={() => onNav("orders")}>
+              View All <ArrowRight size={12} />
+            </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {recentOrders.map(o => (
@@ -340,65 +377,86 @@ function Dashboard({ products, orders, refreshData, lastUpdated }) {
           </div>
         </div>
 
-        {/* OPERATIONS */}
+        {/* INTERESTING INSIGHTS */}
         <div style={cardStyle}>
-          <h3 className="adm-style-25" style={{ marginBottom: '20px' }}>Admin Intel Actions</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-            {[
-              { label: "Inventory", icon: "💎", color: "#9C27B0", desc: "Manage Stock" },
-              { label: "Promotions", icon: "🚀", color: "#FF9800", desc: "Discount Center" },
-              { label: "Live Chat", icon: "💬", color: "#2196F3", desc: "Customer Support" },
-              { label: "Audit Log", icon: "📋", color: "#4CAF50", desc: "System Status" }
-            ].map(action => (
-              <div key={action.label} className="op-card-mini">
-                <div style={{ fontSize: '1.2rem', marginBottom: 5 }}>{action.icon}</div>
-                <div style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700 }}>{action.label}</div>
-                <div style={{ fontSize: '0.6rem', color: '#777' }}>{action.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '24px', marginTop: '24px' }}>
-        {/* GEO INTEL */}
-        <div style={cardStyle}>
-          <h3 className="adm-style-25" style={{ marginBottom: '20px' }}>Customer Geo-Reach</h3>
+          <h3 className="adm-style-25" style={{ marginBottom: '20px' }}>Interesting Insights</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {Object.entries(orders.reduce((acc, o) => {
-              const city = o.customer?.city || "Unknown";
-              acc[city] = (acc[city] || 0) + 1;
-              return acc;
-            }, {})).slice(0, 5).map(([city, count]) => (
-              <div key={city}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#fff', marginBottom: 5 }}>
-                  <span>{city}</span>
-                  <span style={{ color: '#ffd700' }}>{Math.round((count / orders.length) * 100)}%</span>
+             {[
+               { label: "Avg. Order Value", value: `₹${aov.toLocaleString("en-IN")}`, sub: "Higher is better", icon: <TrendingUp size={16} />, color: "#4CAF50" },
+               { label: "Top Active City", value: topCity, sub: "Highest demand area", icon: <MapPin size={16} />, color: "#2196F3" },
+               { label: "Repeat Buyers", value: loyaltyCount, sub: "Loyal customer base", icon: <Users size={16} />, color: "#FFD700" },
+               { label: "Growth Potential", value: "84%", sub: "Market reach metric", icon: <Zap size={16} />, color: "#FF9800" }
+             ].map((item, i) => (
+                <div key={i} style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,215,0,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ color: '#888', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
+                    <div style={{ color: item.color }}>{item.icon}</div>
+                  </div>
+                  <div style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700, margin: '5px 0' }}>{item.value}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#555' }}>{item.sub}</div>
                 </div>
-                <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(count / orders.length) * 100}%`, background: '#ffd700', borderRadius: 2 }}></div>
-                </div>
-              </div>
-            ))}
-            {orders.length === 0 && <div style={{ color: '#444', fontSize: '0.75rem' }}>Waiting for geo-data...</div>}
-          </div>
-        </div>
-
-        {/* CHART */}
-        <div style={cardStyle}>
-          <h3 className="adm-style-25" style={{ marginBottom: '15px' }}>Sri Ram Balaji - Sales Momentum</h3>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '100px', padding: '10px 0' }}>
-            {[30, 60, 40, 80, 50, 90, 70, 100, 85, 95, 60, 80].map((h, i) => (
-              <div key={i} style={{ flex: 1, background: h > 80 ? 'linear-gradient(0deg, #ff6b35, #ffd700)' : 'rgba(255,215,0,0.1)', height: `${h}%`, borderRadius: '3px 3px 0 0', position: 'relative' }} className="moment-bar">
-                <div className="moment-tooltip">₹{h * 200}+</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#444', fontSize: '0.6rem', marginTop: 10 }}>
-            <span>JAN</span><span>MAR</span><span>JUL</span><span>SEP</span><span>PEAK SEASON</span><span>DEC</span>
+             ))}
           </div>
         </div>
       </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginTop: '24px' }}>
+        {/* VIP LEADERBOARD */}
+        <div style={{ ...cardStyle, background: 'linear-gradient(135deg, rgba(15,6,0,0.9), rgba(255,215,0,0.03))' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h3 className="adm-style-25" style={{ margin: 0, color: '#FFD700', fontSize: '1.1rem' }}>
+              <Star size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} /> VIP Customer Club (Top LTV)
+            </h3>
+            <span style={{ fontSize: '0.7rem', color: '#888' }}>Sorted by Total Lifetime Spend</span>
+          </div>
+          <div className="adm-style-104" style={{ border: '1px solid rgba(255,215,0,0.08)', borderRadius: 12, overflow: 'hidden' }}>
+            <table className="adm-style-105">
+              <thead>
+                <tr style={{ background: 'rgba(255,215,0,0.05)' }}>
+                  <th style={{ padding: '12px 20px', color: '#666', fontSize: '0.65rem' }}>RANK</th>
+                  <th style={{ padding: '12px 20px', color: '#666', fontSize: '0.65rem' }}>CUSTOMER</th>
+                  <th style={{ padding: '12px 20px', color: '#666', fontSize: '0.65rem' }}>ORDERS</th>
+                  <th style={{ padding: '12px 20px', color: '#666', fontSize: '0.65rem' }}>LIFETIME VALUE</th>
+                  <th style={{ padding: '12px 20px', color: '#666', fontSize: '0.65rem' }}>QUICK ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ltvData.map((vip, idx) => (
+                  <tr key={vip.mobile} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                    <td style={{ padding: '15px 20px', fontWeight: 900, color: idx === 0 ? '#ffd700' : '#444' }}># {idx + 1}</td>
+                    <td style={{ padding: '15px 20px' }}>
+                       <div style={{ fontWeight: 700, color: '#fff' }}>{vip.name}</div>
+                       <div style={{ fontSize: '0.7rem', color: '#666' }}>{vip.mobile}</div>
+                    </td>
+                    <td style={{ padding: '15px 20px', color: '#aaa' }}>{vip.count} Orders</td>
+                    <td style={{ padding: '15px 20px', color: '#ffd700', fontWeight: 800 }}>₹{vip.total.toLocaleString("en-IN")}</td>
+                    <td style={{ padding: '15px 20px' }}>
+                       <button 
+                         onClick={() => window.open(`https://wa.me/91${vip.mobile}?text=Hi ${vip.name.split(" ")[0]}, as a VIP customer of Sri Ram Balaji, we have a special discount for you! Check out our new 2025 Price List.`, "_blank")}
+                         style={{ 
+                           background: 'rgba(76,175,80,0.1)', 
+                           border: '1px solid rgba(76,175,80,0.3)', 
+                           color: '#4caf50', 
+                           padding: '6px 12px', 
+                           borderRadius: 8, 
+                           fontSize: '0.7rem', 
+                           cursor: 'pointer',
+                           display: 'flex',
+                           alignItems: 'center',
+                           gap: 5
+                         }}
+                       >
+                         <MessageCircle size={14} /> Send VIP Promo
+                       </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
 
       <style>{`
         .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; display: inline-block; animation: adrenaline 1.5s infinite; }
@@ -497,22 +555,25 @@ function OrdersPage({ orders, setOrders }) {
     <div>
       <div className="adm-style-39">
         <h1 style={pageTitle}>Order Management</h1>
-        <button onClick={exportToCSV} style={actionBtn}>
-          📥 Export to Excel
+        <button onClick={exportToCSV} style={{ ...actionBtn, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Download size={18} /> Export to Excel
         </button>
       </div>
 
       <div className="adm-style-40">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="🔍 Search orders..."
-          style={{
-            ...inputStyle,
-            flex: 1,
-            minWidth: 200,
-          }}
-        />
+        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+          <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search orders..."
+            style={{
+              ...inputStyle,
+              width: '100%',
+              paddingLeft: 40
+            }}
+          />
+        </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -562,11 +623,11 @@ function OrdersPage({ orders, setOrders }) {
               <div className="adm-style-44">
                 <div className="adm-style-45">{o.id}</div>
                 <div className="adm-style-46">{typeof o.customer === 'object' ? o.customer.name : o.customer}</div>
-                <div className="adm-style-47">
-                  📞 {o.customer?.mobile || o.mobile} &nbsp;|&nbsp; 📍 {o.customer?.city || o.city}
+                <div className="adm-style-47" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                   <Phone size={14} /> {o.customer?.mobile || o.mobile} &nbsp;|&nbsp; <MapPin size={14} /> {o.customer?.city || o.city}
                 </div>
-                <div className="adm-style-48">
-                  📅 {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : (o.date || "-")} &nbsp;|&nbsp; {Array.isArray(o.items) ? o.items.length : (o.items || 0)} items
+                <div className="adm-style-48" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                   <Calendar size={14} /> {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : (o.date || "-")} &nbsp;|&nbsp; <Package size={14} /> {Array.isArray(o.items) ? o.items.length : (o.items || 0)} items
                 </div>
                 <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {Array.isArray(o.items) && o.items.map((item, idx) => (
@@ -611,7 +672,7 @@ function OrdersPage({ orders, setOrders }) {
         ))}
       </div>
 
-      {filtered.length === 0 && <EmptyState icon="📦" msg="No orders found" />}
+      {filtered.length === 0 && <EmptyState icon={<Package size={48} />} msg="No orders found" />}
     </div>
   );
 }
@@ -987,12 +1048,16 @@ function ProductsPage({ products, setProducts }) {
                   flex: 1,
                   ...actionBtn,
                   padding: "7px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6
                 }}
               >
-                ✏️ Edit
+                <Edit size={14} /> Edit
               </button>
-              <button onClick={() => remove(p)} className="adm-style-73">
-                🗑️ Delete
+              <button onClick={() => remove(p)} className="adm-style-73" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <Trash2 size={14} /> Delete
               </button>
             </div>
           </div>
@@ -1091,8 +1156,8 @@ function CouponsPage({ coupons, setCoupons }) {
     <div>
       <div className="adm-style-74">
         <h1 style={pageTitle}>Coupon Management</h1>
-        <button onClick={() => setShowForm((s) => !s)} style={actionBtn}>
-          + Create Coupon
+        <button onClick={() => setShowForm((s) => !s)} style={{ ...actionBtn, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Plus size={18} /> {showForm ? "Close Form" : "Create Coupon"}
         </button>
       </div>
 
@@ -1182,8 +1247,8 @@ function CouponsPage({ coupons, setCoupons }) {
             </div>
           </div>
           <div className="adm-style-77">
-            <button onClick={add} style={actionBtn}>
-              Create Coupon
+            <button onClick={add} style={{ ...actionBtn, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Plus size={16} /> Create Coupon
             </button>
             <button
               onClick={() => setShowForm(false)}
@@ -1191,9 +1256,12 @@ function CouponsPage({ coupons, setCoupons }) {
                 ...actionBtn,
                 background: "rgba(255,255,255,0.08)",
                 color: "#aaa",
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
               }}
             >
-              Cancel
+              <X size={16} /> Cancel
             </button>
           </div>
         </div>
@@ -1244,8 +1312,9 @@ function CouponsPage({ coupons, setCoupons }) {
               <button
                 onClick={() => remove(c._id || c.id)}
                 className="adm-style-85"
+                style={{ padding: '6px' }}
               >
-                🗑️
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
@@ -1312,8 +1381,8 @@ function BannersPage({ banners, setBanners }) {
     <div>
       <div className="adm-style-74">
         <h1 style={pageTitle}>Banner Management</h1>
-        <button onClick={() => setShowForm((s) => !s)} style={actionBtn}>
-          + Create Banner
+        <button onClick={() => setShowForm((s) => !s)} style={{ ...actionBtn, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Plus size={18} /> {showForm ? "Close Form" : "Create Banner"}
         </button>
       </div>
 
@@ -1362,12 +1431,12 @@ function BannersPage({ banners, setBanners }) {
             </div>
           </div>
           <div className="adm-style-77" style={{ marginTop: 20 }}>
-            <button onClick={save} style={actionBtn}>Save Banner</button>
+            <button onClick={save} style={{ ...actionBtn, display: 'flex', alignItems: 'center', gap: 6 }}><CheckCircle size={16} /> Save Banner</button>
             <button
               onClick={() => setShowForm(false)}
-              style={{ ...actionBtn, background: "rgba(255,255,255,0.08)", color: "#aaa", marginLeft: 10 }}
+              style={{ ...actionBtn, background: "rgba(255,255,255,0.08)", color: "#aaa", marginLeft: 10, display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              Cancel
+              <X size={16} /> Cancel
             </button>
           </div>
         </div>
@@ -1396,10 +1465,12 @@ function BannersPage({ banners, setBanners }) {
               <div style={{ fontWeight: 700, color: "#FFD700" }}>{b.emoji} {b.title}</div>
               <div style={{ fontSize: "0.8rem", color: "#888" }}>{b.subtitle}</div>
             </div>
-            <button onClick={() => remove(b._id || b.id)} className="adm-style-85">🗑️</button>
+             <button onClick={() => remove(b._id || b.id)} className="adm-style-85" style={{ padding: '6px' }}>
+                <Trash2 size={16} />
+             </button>
           </div>
         ))}
-        {banners.length === 0 && <EmptyState icon="🖼️" msg="No banners active" />}
+        {banners.length === 0 && <EmptyState icon={<ImageIcon size={48}/>} msg="No banners active" />}
       </div>
     </div>
   );
@@ -1419,12 +1490,15 @@ function UsersPage({ users }) {
     <div>
       <h1 style={pageTitle}>User Management</h1>
       <div className="adm-style-40" style={{ marginTop: 20 }}>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="🔍 Search users by name or mobile..."
-          style={{ ...inputStyle, flex: 1 }}
-        />
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search users by name or mobile..."
+            style={{ ...inputStyle, paddingLeft: 40 }}
+          />
+        </div>
       </div>
 
       <div className="adm-style-42">
@@ -1462,7 +1536,7 @@ function UsersPage({ users }) {
           </table>
         </div>
       </div>
-      {filtered.length === 0 && <EmptyState icon="👥" msg="No users found" />}
+      {filtered.length === 0 && <EmptyState icon={<Users size={48}/>} msg="No users found" />}
     </div>
   );
 }
@@ -1663,12 +1737,14 @@ export default function AdminApp() {
           <div className="adm-style-125">
             <div className="adm-style-126">Live Feed Active</div>
             <span className="adm-style-127">Sri Ram Balaji Shop</span>
-            <button className="adm-style-128" onClick={() => { localStorage.removeItem("token"); setAuth(false); }}>Logout</button>
+            <button className="adm-style-128" style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => { localStorage.removeItem("token"); setAuth(false); }}>
+              <LogOut size={14} /> Logout
+            </button>
           </div>
         </header>
 
         <main className="adm-style-129" >
-          {page === "dashboard" && <Dashboard products={products} orders={orders} refreshData={fetchData} lastUpdated={lastUpdated} />}
+          {page === "dashboard" && <Dashboard products={products} orders={orders} refreshData={fetchData} lastUpdated={lastUpdated} onNav={setPage} />}
           {page === "orders" && <OrdersPage orders={orders} setOrders={setOrders} />}
           {page === "products" && <ProductsPage products={products} setProducts={setProducts} />}
           {page === "coupons" && <CouponsPage coupons={coupons} setCoupons={setCoupons} />}

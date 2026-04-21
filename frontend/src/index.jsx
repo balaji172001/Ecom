@@ -1,6 +1,13 @@
 import "./index.css";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { 
+  ShoppingCart, User, LogOut, LogIn, Search, Star, MessageCircle, 
+  Smartphone, Gift, AlertTriangle, CheckCircle, Truck, Package, 
+  Lock, Flame, ArrowRight, Tag, ShieldCheck, Mail, Phone, ExternalLink,
+  ChevronRight, Camera, Play, Send, Home, Info, Heart, Minus, Plus, Trash2,
+  X, Menu, MessageSquare, ShoppingBag, Sparkles, ClipboardList, PartyPopper, Zap, MapPin
+} from "lucide-react";
 
 // ============================================================
 // FIREWORKS CANVAS ANIMATION
@@ -148,7 +155,7 @@ const API_BASE = window.location.hostname === "localhost" || window.location.hos
 
 // Helper to render emoji or img tag (hoisted)
 function renderImage(img, className) {
-  if (!img) return "🎇";
+  if (!img) return <Flame size={24} color="#FFD700" />;
   if (typeof img !== 'string') return img;
   if (img.startsWith("/") || img.startsWith("http")) {
     const src = img.startsWith("/") ? `${API_BASE}${img}` : img;
@@ -184,19 +191,19 @@ const COMBOS = [{
   price: 499,
   mrp: 999,
   items: ["10 Cm Red Sparklers", "Ground Chakkar Big", "Flower Pots Small", "Red Bijili"],
-  emoji: "🎆"
+  icon: <Sparkles size={24} />
 }, {
   name: "Family Celebration",
   price: 1299,
   mrp: 2599,
   items: ["30 Cm Red Sparklers", "Flower Pots Deluxe", "1000 Wala Garland", "King of King Bomb", "Peacock Fountain"],
-  emoji: "🎁"
+  icon: <Gift size={24} />
 }, {
   name: "Grand Festival Box",
   price: 2999,
   mrp: 5999,
   items: ["120 Shot Function Box", "5000 Wala Garland", "Flower Pots Ashoka", "Tri Colour", "Thor Fountain", '3½" Fancy Aerial'],
-  emoji: "🎊"
+  icon: <PartyPopper size={24} />
 }];
 
 // ============================================================
@@ -277,8 +284,9 @@ function btnStyle(type) {
 const StarRating = ({
   rating
 }) => <span className="idx-style-2">
-    {"★".repeat(Math.floor(rating))}
-    {"☆".repeat(5 - Math.floor(rating))}
+    {Array.from({ length: 5 }).map((_, i) => (
+      <Star key={i} size={14} fill={i < Math.floor(rating) ? "#FFD700" : "transparent"} stroke={i < Math.floor(rating) ? "#FFD700" : "#444"} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 2 }} />
+    ))}
     <span className="idx-style-3">({rating})</span>
   </span>;
 
@@ -401,9 +409,13 @@ function ProductCard({
       ...btnStyle(p.stock === 0 ? "disabled" : "primary"),
       width: "100%",
       padding: "8px",
-      fontSize: "0.8rem"
+      fontSize: "0.8rem",
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8
     }}>
-      {p.stock === 0 ? "Out of Stock" : "Add to Cart 🛒"}
+      {p.stock === 0 ? "Out of Stock" : <><ShoppingCart size={16} /> Add to Cart</>}
     </button>
   </div>;
 }
@@ -430,7 +442,6 @@ function HomePage({
     {/* HERO (Shown if no banners or as legacy header) */}
     {!banners.length && (
       <section className="idx-style-44">
-        <div className="idx-style-45">🪔</div>
         <div className="idx-style-46">Sri Gopalsamy Presents</div>
         <h1 className="idx-style-47">
           Sri Ram Balaji
@@ -445,16 +456,18 @@ function HomePage({
           <br />
           Pillaiyarkulam, P. Ramachatrapuram - 626 137, Srivilliputtur (T.K)
         </p>
-        <p className="idx-style-50">📞 99407 67763 &nbsp;|&nbsp; 99409 19857</p>
-        <div className="idx-style-51">
-          🎉 Special Offer — Discount UPTO 50% OFF on all products!
+        <p className="idx-style-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <Phone size={16} /> 99407 67763 &nbsp;|&nbsp; 99409 19857
+        </p>
+        <div className="idx-style-51" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <Sparkles size={16} /> Special Offer — Discount UPTO 50% OFF on all products!
         </div>
         <div className="idx-style-52">
           <button onClick={() => onNavigate("products")} style={btnStyle("primary")}>
-            Shop Now 🎆
+            Shop Now <Flame size={18} style={{ marginLeft: 8, display: 'inline-block', verticalAlign: 'middle' }} />
           </button>
           <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
-            View All {products.length} Products →
+            View All {products.length} Products <ArrowRight size={16} style={{ marginLeft: 8, display: 'inline-block', verticalAlign: 'middle' }} />
           </button>
         </div>
         <div className="idx-style-53">
@@ -467,15 +480,15 @@ function HomePage({
     )}
     {/* CONNECT WITH US */}
     <section key="social-connect" className="social-connect-root" style={sectionStyle}>
-      <SectionTitle icon="📱" title="Connect With Us" sub="Stay updated with our latest collections & offers" />
+      <SectionTitle icon={<Smartphone size={32} />} title="Connect With Us" sub="Stay updated with our latest collections & offers" />
       <div className="social-grid-wrapper">
         <a href="https://www.instagram.com/sri_rambalaji" target="_blank" rel="noreferrer" className="social-link-card" style={cardStyle}>
-          <div className="social-link-icon-box">📸</div>
+          <div className="social-link-icon-box"><Camera size={24} color="#E1306C" /></div>
           <h3 className="social-link-title-text">@sri_rambalaji</h3>
           <p className="social-link-subtitle-text">Instagram Official</p>
         </a>
         <a href="https://www.youtube.com/@srirambalajiagency2224" target="_blank" rel="noreferrer" className="social-link-card" style={cardStyle}>
-          <div className="social-link-icon-box">▶️</div>
+          <div className="social-link-icon-box"><Play size={24} fill="#FF0000" color="#FF0000" /></div>
           <h3 className="social-link-title-text">Sri Ram Balaji Agency</h3>
           <p className="social-link-subtitle-text">YouTube Official Channel</p>
         </a>
@@ -488,7 +501,7 @@ function HomePage({
 
     {/* COMBO OFFERS */}
     <section style={sectionStyle}>
-      <SectionTitle icon="🎁" title="Combo Offers" sub="Best value bundles for your celebration" />
+      <SectionTitle icon={<Gift size={32} />} title="Combo Offers" sub="Best value bundles for your celebration" />
       <div className="idx-style-59">
         {COMBOS.map(c => {
           const d = Math.round((1 - c.price / c.mrp) * 100);
@@ -504,11 +517,12 @@ function HomePage({
               top: -10,
               right: -10,
               fontSize: "5rem",
-              opacity: 0.08
+              opacity: 0.08,
+              color: '#FFD700'
             }}>
-              {c.emoji}
+              {c.icon}
             </div>
-            <div className="idx-style-60">{c.emoji}</div>
+            <div className="idx-style-60">{c.icon}</div>
             <h3 className="idx-style-61">{c.name}</h3>
             <div className="idx-style-62">
               <span className="idx-style-63">₹{c.price}</span>
@@ -516,8 +530,8 @@ function HomePage({
               <span className="idx-style-65">{d}% OFF</span>
             </div>
             <ul className="idx-style-66">
-              {c.items.map(i => <li key={i} className="idx-style-67">
-                ✓ {i}
+              {c.items.map(i => <li key={i} className="idx-style-67" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CheckCircle size={14} color="#4CAF50" /> {i}
               </li>)}
             </ul>
             <button onClick={() => {
@@ -526,9 +540,13 @@ function HomePage({
               ...btnStyle("primary"),
               width: "100%",
               padding: "9px",
-              fontSize: "0.8rem"
+              fontSize: "0.8rem",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8
             }}>
-              "Order Now"
+              Order Now <ArrowRight size={16} />
             </button>
           </div>;
         })}
@@ -537,13 +555,13 @@ function HomePage({
 
     {/* FEATURED PRODUCTS */}
     <section style={sectionStyle}>
-      <SectionTitle icon="⭐" title="Featured Products" sub="Best sellers from Price List 2025" />
+      <SectionTitle icon={<Star size={32} color="#FFD700" />} title="Featured Products" sub="Best sellers from Price List 2025" />
       <div className="idx-style-68">
         {featured.map(p => <ProductCard key={p.id} p={p} onAddToCart={onAddToCart} onNavigate={onNavigate} />)}
       </div>
       <div className="idx-style-69">
         <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
-          View All {products.length} Products →
+          View All {products.length} Products <ArrowRight size={16} style={{ marginLeft: 8, display: 'inline-block', verticalAlign: 'middle' }} />
         </button>
       </div>
     </section>
@@ -557,10 +575,10 @@ function HomePage({
       width: "100%",
       maxWidth: "100%"
     }}>
-      <SectionTitle icon="⚠️" title="Safety Instructions" sub="Always follow these guidelines before using crackers" />
+      <SectionTitle icon={<AlertTriangle size={32} color="#FF5252" />} title="Safety Instructions" sub="Always follow these guidelines before using crackers" />
       <div className="idx-style-70">
-        {[["🧑‍🦯", "Adult Supervision", "Always have adult supervision"], ["💧", "Keep Water Nearby", "Keep a bucket of water or sand nearby"], ["👃", "Maintain Distance", "Stand 2–3 meters away after lighting"], ["👗", "Wear Cotton", "Avoid synthetic materials near fire"], ["🏠", "Open Areas Only", "Use only in open, clear areas"], ["🚫", "No Relight", "Never relight a dud cracker"]].map(([e, t, d]) => <div key={t} className="idx-style-71">
-          <div className="idx-style-72">{e}</div>
+        {[[<User size={24} />, "Adult Supervision", "Always have adult supervision"], [<Flame size={24} />, "Keep Water Nearby", "Keep a bucket of water or sand nearby"], [<Info size={24} />, "Maintain Distance", "Stand 2–3 meters away after lighting"], [<Tag size={24} />, "Wear Cotton", "Avoid synthetic materials near fire"], [<Home size={24} />, "Open Areas Only", "Use only in open, clear areas"], [<X size={24} />, "No Relight", "Never relight a dud cracker"]].map(([icon, t, d]) => <div key={t} className="idx-style-71">
+          <div className="idx-style-72" style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: '#FF6B35' }}>{icon}</div>
           <div className="idx-style-73">{t}</div>
           <div className="idx-style-74">{d}</div>
         </div>)}
@@ -569,7 +587,7 @@ function HomePage({
 
     {/* REVIEWS */}
     <section style={sectionStyle}>
-      <SectionTitle icon="💬" title="Customer Reviews" />
+      <SectionTitle icon={<MessageSquare size={32} />} title="Customer Reviews" />
       <div className="idx-style-75">
         {REVIEWS.map((r, i) => <div key={i} style={{
           display: i === rev ? "block" : "none",
@@ -634,10 +652,13 @@ function ProductsPage({
     </div>
 
     <div className="idx-style-88">
-      <input value={search} onChange={e => {
-        setSearch(e.target.value);
-        setPage(1);
-      }} placeholder="🔍 Search crackers..." className="idx-style-89" />
+      <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+        <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+        <input value={search} onChange={e => {
+          setSearch(e.target.value);
+          setPage(1);
+        }} placeholder="Search crackers..." className="idx-style-89" style={{ ...inputStyle, paddingLeft: 40 }} />
+      </div>
       <select value={sort} onChange={e => setSort(e.target.value)} className="idx-style-90">
         <option value="default">Default Sort</option>
         <option value="low">Price: Low → High</option>
@@ -1152,7 +1173,7 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
             background: step > i + 1 ? "#4CAF50" : step === i + 1 ? "linear-gradient(135deg,#FF6B35,#FFD700)" : "rgba(255,255,255,0.07)",
             color: step >= i + 1 ? "#000" : "#666"
           }}>
-            {step > i + 1 ? "✓" : i + 1}
+            {step > i + 1 ? <CheckCircle size={16} /> : i + 1}
           </div>
           <span style={{
             color: step >= i + 1 ? "#FFD700" : "#555",
@@ -1356,7 +1377,7 @@ function OrderSuccessPage({
   onNavigate
 }) {
   return <div className="idx-style-193">
-    <div className="idx-style-194">🎆</div>
+    <div className="idx-style-194"><Flame size={64} color="#FFD700" /></div>
     <h1 className="idx-style-195">Order Placed!</h1>
     <p className="idx-style-196">
       Thank you for shopping with Sri Ram Balaji Agency 🙏
@@ -1369,8 +1390,8 @@ function OrderSuccessPage({
       </div>
     </div>
     <div className="idx-style-201">
-      {[["✅", "Order Confirmed", "Details sent on WhatsApp"], ["🚚", "3–5 Days", "Estimated delivery"], ["📱", "Payment", "Secure GPay payment"]].map(([e, t, d]) => <div key={t} className="idx-style-202">
-        <div className="idx-style-203">{e}</div>
+      {[[<CheckCircle size={24} />, "Order Confirmed", "Details sent on WhatsApp"], [<Truck size={24} />, "3–5 Days", "Estimated delivery"], [<ClipboardList size={24} />, "Order Summary", "View your items below"]].map(([icon, t, d]) => <div key={t} className="idx-style-202">
+        <div className="idx-style-203" style={{ color: '#FFD700', display: 'flex', justifyContent: 'center' }}>{icon}</div>
         <div className="idx-style-204">{t}</div>
         <div className="idx-style-205">{d}</div>
       </div>)}
@@ -1473,7 +1494,7 @@ function OrdersPage({ orders, token }) {
 
   if (loading) return <div className="idx-style-226"><p>Loading your orders...</p></div>;
   if (!loading && displayOrders.length === 0) return <div className="idx-style-226">
-    <div className="idx-style-227">📦</div>
+    <div className="idx-style-227"><Package size={64} color="#888" /></div>
     <h2 className="idx-style-228">No orders yet</h2>
     <p className="idx-style-229">Your order history will appear here after you place an order.</p>
   </div>;
@@ -1485,7 +1506,9 @@ function OrdersPage({ orders, token }) {
         <div>
           <div className="idx-style-233">#{o.orderId}</div>
           <div className="idx-style-234">Placed on {new Date(o.createdAt || Date.now()).toLocaleDateString("en-IN")}</div>
-          <div className="idx-style-235">📍 {o.customer?.address || o.address}, {o.customer?.city || o.city}</div>
+          <div className="idx-style-235" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MapPin size={14} /> {o.customer?.address || o.address}, {o.customer?.city || o.city}
+          </div>
           <div className="idx-style-236">📅 Status: {o.status || "Confirmed"} • {o.items?.length || 0} items</div>
           <div style={{ fontSize: '0.75rem', color: '#888', marginTop: 5 }}>
             Subtotal: ₹{o.subtotal?.toLocaleString("en-IN")} &nbsp;|&nbsp;
@@ -1534,7 +1557,7 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
         </div>
       </div>
       <div className="navbar-links">
-        {[["home", "Home", "🏠"], ["products", "Products", "🛍️"]].map(([p, l, icon]) => <button key={p} onClick={() => onNavigate(p)} style={{
+        {[["home", "Home", <Home size={18} />], ["products", "Products", <ShoppingBag size={18} />]].map(([p, l, icon]) => <button key={p} onClick={() => onNavigate(p)} style={{
           background: "none",
           border: "none",
           color: page === p ? "#FFD700" : "#888",
@@ -1543,19 +1566,24 @@ function Navbar({ page, cart, onNavigate, user, onLogout }) {
           fontFamily: "inherit",
           fontSize: "0.8rem",
           fontWeight: page === p ? 700 : 400,
-          borderBottom: page === p ? "2px solid #FFD700" : "2px solid transparent"
+          borderBottom: page === p ? "2px solid #FFD700" : "2px solid transparent",
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
         }}>{icon} <span className="nav-btn-text">{l}</span></button>)}
 
         {user ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => onNavigate("orders")} style={{ background: "none", padding: "4px 8px", border: "none", color: page === "orders" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, borderBottom: page === "orders" ? "2px solid #FFD700" : "2px solid transparent" }}>
-            👤 <span className="nav-btn-text">{user.name.split(" ")[0]}</span>
+          <button onClick={() => onNavigate("orders")} style={{ background: "none", padding: "4px 8px", border: "none", color: page === "orders" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, borderBottom: page === "orders" ? "2px solid #FFD700" : "2px solid transparent", display: 'flex', alignItems: 'center', gap: 6 }}>
+            <User size={16} /> <span className="nav-btn-text">{user.name.split(" ")[0]}</span>
           </button>
           <button onClick={onLogout} style={{
-            background: "none", border: "none", color: "#FF5252", padding: "6px 9px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", borderBottom: "2px solid transparent"
-          }}>🚪 <span className="nav-btn-text">Logout</span></button>
-        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", padding: "4px 8px", borderBottom: page === "login" ? "2px solid #FFD700" : "2px solid transparent" }}>🔑 <span className="nav-btn-text">Login</span></button>}
-        <button onClick={() => onNavigate("cart")} style={{ ...btnStyle("primary"), padding: "7px 13px", fontSize: "0.8rem", position: "relative", marginLeft: 4 }}>
-          🛒 {cartCount > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: "#FF1744", color: "#fff", borderRadius: "50%", width: 17, height: 17, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 900 }}>{cartCount}</span>}
+            background: "none", border: "none", color: "#FF5252", padding: "6px 9px", borderRadius: 6, fontSize: "0.8rem", cursor: "pointer", borderBottom: "2px solid transparent", display: 'flex', alignItems: 'center', gap: 6
+          }}><LogOut size={16} /> <span className="nav-btn-text">Logout</span></button>
+        </div> : <button onClick={() => onNavigate("login")} style={{ background: "none", border: "none", color: page === "login" ? "#FFD700" : "#888", cursor: "pointer", fontSize: "0.82rem", padding: "4px 8px", borderBottom: page === "login" ? "2px solid #FFD700" : "2px solid transparent", display: 'flex', alignItems: 'center', gap: 6 }}>
+          <LogIn size={16} /> <span className="nav-btn-text">Login</span>
+        </button>}
+        <button onClick={() => onNavigate("cart")} style={{ ...btnStyle("primary"), padding: "7px 13px", fontSize: "0.8rem", position: "relative", marginLeft: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ShoppingCart size={18} /> {cartCount > 0 && <span style={{ position: "absolute", top: -6, right: -6, background: "#FF1744", color: "#fff", borderRadius: "50%", width: 17, height: 17, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 900 }}>{cartCount}</span>}
         </button>
       </div>
     </div>
@@ -1571,22 +1599,22 @@ function Walkthrough() {
 
   const steps = [
     {
-      emoji: "🎇",
+      icon: <Flame size={48} color="#FFD700" />,
       title: "Welcome to Sri Ram Balaji!",
       text: "Premium Quality Fireworks for your grand celebrations. Explore our Price List 2025!"
     },
     {
-      emoji: "🛍️",
+      icon: <ShoppingBag size={48} color="#FFD700" />,
       title: "Easy Browsing",
       text: "Filter by categories and search for your favorite crackers easily."
     },
     {
-      emoji: "🛒",
+      icon: <ShoppingCart size={48} color="#FFD700" />,
       title: "Smart Shopping",
       text: "Add items to your cart and see the best discounts applied instantly."
     },
     {
-      emoji: "📱",
+      icon: <Send size={48} color="#FFD700" />,
       title: "Order on WhatsApp",
       text: "Finalize your order and send it directly via WhatsApp for quick confirmation!"
     }
@@ -1631,7 +1659,7 @@ function Walkthrough() {
       <div className="walkthrough-card">
         <button className="walkthrough-skip" onClick={close}>Skip</button>
         <div className="walkthrough-content">
-          <div className="walkthrough-emoji">{steps[step].emoji}</div>
+          <div className="walkthrough-emoji">{steps[step].icon}</div>
           <h2 className="walkthrough-title">{steps[step].title}</h2>
           <p className="walkthrough-text">{steps[step].text}</p>
         </div>
@@ -1761,7 +1789,7 @@ export default function ShopApp() {
       if (ex) return c.map(i => i.id === product.id ? { ...i, qty: i.qty + qty } : i);
       return [...c, { ...product, qty }];
     });
-    showToast(`✓ ${product.name} added to cart!`);
+    showToast(`${product.name} added to cart!`);
   }, []);
 
   const onUpdate = (id, qty) => {
@@ -1865,7 +1893,9 @@ export default function ShopApp() {
       <div className="idx-style-253">
         <div className="idx-style-254">
           <div>
-            <div className="idx-style-255">🪔 Sri Ram Balaji Agency</div>
+            <div className="idx-style-255" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Flame size={20} color="#FFD700" /> Sri Ram Balaji Agency
+            </div>
             <p className="idx-style-256">
               329-H/1, Srivilliputtur to Alangulam Road,
               <br />
@@ -1893,8 +1923,16 @@ export default function ShopApp() {
           </div>
           <div>
             <div className="idx-style-262">Why Choose Us</div>
-            {["✅ Licensed & Certified Products", "🏷️ Upto 50% Discount", "🚀 Pan-India Delivery", "🔒 Secure Payments", "📦 Safe Packaging", "📞 24×7 Support"].map(i => <div key={i} className="idx-style-263">
-              {i}
+            {[
+              { icon: <ShieldCheck size={16} />, label: "Licensed & Certified Products" },
+              { icon: <Tag size={16} />, label: "Upto 50% Discount" },
+              { icon: <Send size={16} />, label: "Pan-India Delivery" },
+              { icon: <Lock size={16} />, label: "Secure Payments" },
+              { icon: <Package size={16} />, label: "Safe Packaging" },
+              { icon: <Phone size={16} />, label: "24×7 Support" },
+              { icon: <ExternalLink size={16} />, label: "Third Party Verified" } // Perfect icon for thirdparty
+            ].map(i => <div key={i.label} className="idx-style-263" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: '#FFD700' }}>{i.icon}</span> {i.label}
             </div>)}
           </div>
         </div>
@@ -1903,14 +1941,16 @@ export default function ShopApp() {
             © 2026 Sri Ram Balaji Agency, Srivilliputtur.&nbsp;|&nbsp; All rights reserved.
             <br /> <span className="managed-by-highlight">Managed by Balaji G (6383783573).</span>
           </span>
-          <span>🔒 SSL Secured &nbsp;|&nbsp; PESO Licensed Products</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Lock size={14} /> SSL Secured &nbsp;|&nbsp; <ShieldCheck size={14} /> PESO Licensed Products
+          </span>
         </div>
       </div>
     </footer>
 
     {/* WhatsApp floating button */}
     <a href="https://wa.me/916374549935?text=Hi! I want to order from Sri Ram Balaji Agency Price List 2025" target="_blank" rel="noreferrer" className="idx-style-265">
-      💬
+      <MessageCircle size={28} />
     </a>
 
     {/* AUTH MODALS — appear as overlay, don't navigate away */}
