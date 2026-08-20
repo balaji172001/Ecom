@@ -1,9 +1,9 @@
 import "./index.css";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { 
-  ShoppingCart, User, LogOut, LogIn, Search, Star, MessageCircle, 
-  Smartphone, Gift, AlertTriangle, CheckCircle, Truck, Package, 
+import {
+  ShoppingCart, User, LogOut, LogIn, Search, Star, MessageCircle,
+  Smartphone, Gift, AlertTriangle, CheckCircle, Truck, Package,
   Lock, Flame, ArrowRight, Tag, ShieldCheck, Mail, Phone, ExternalLink,
   ChevronRight, Camera, Play, Send, Home, Info, Heart, Minus, Plus, Trash2,
   X, Menu, MessageSquare, ShoppingBag, Sparkles, ClipboardList, PartyPopper, Zap, MapPin
@@ -494,7 +494,7 @@ function HomePage({
         </a>
       </div>
     </section>
-    
+
 
 
 
@@ -1597,13 +1597,13 @@ function OrdersPage({ orders, token }) {
           <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Array.isArray(o.items) && o.items.map((item, idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-                 <div style={{ width: 32, height: 32, borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
-                    {renderImage(item.image, "idx-order-item-img")}
-                 </div>
-                 <div style={{ flex: 1, fontSize: '0.78rem', color: '#ccc' }}>
-                    {item.name} <span style={{ color: '#666' }}>× {item.qty}</span>
-                 </div>
-                 <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
+                  {renderImage(item.image, "idx-order-item-img")}
+                </div>
+                <div style={{ flex: 1, fontSize: '0.78rem', color: '#ccc' }}>
+                  {item.name} <span style={{ color: '#666' }}>× {item.qty}</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</div>
               </div>
             ))}
           </div>
@@ -2191,6 +2191,8 @@ export default function ShopApp() {
 
   const shared = { onAddToCart, onNavigate, banners };
   return <div className="idx-style-250">
+
+
     <FireworksCanvas />
     <Navbar page={page} cart={cart} onNavigate={onNavigate} user={user} onLogout={onLogout} />
 
