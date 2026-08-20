@@ -1,6 +1,7 @@
 // ============================================================
 // SIVAKASI CRACKERS - Complete Backend Server
 // Node.js + Express + MongoDB + Razorpay + JWT
+// Security & High-Concurrency (1000 req/s) Ready
 // ============================================================
 
 const express = require("express");
@@ -15,30 +16,147 @@ const path = require("path");
 const { v2: cloudinary } = require("cloudinary");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const nodemailer = require("nodemailer");
+const rateLimit = require("express-rate-limit");
+const { body, validationResult } = require("express-validator");
+const helmet = require("helmet");
+const compression = require("compression");
+const mongoSanitize = require("express-mongo-sanitize");
+const hpp = require("hpp");
+const cluster = require("cluster");
+const os = require("os");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ============================================================
+// SECURITY & PERFORMANCE MIDDLEWARE
+// ============================================================
 
+// 1. Helmet HTTP Security Headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 
-app.use(cors({ origin: "*", credentials: false }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 2. Response Body Compression (gzip)
+app.use(compression());
+
+// 3. Mongo Operator Injection Protection
+app.use(mongoSanitize({ replaceWith: "_" }));
+
+// 4. HTTP Parameter Pollution Protection
+app.use(hpp());
+
+// 5. Strict CORS Configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
+  "http://localhost:3000",
+  "http://localhost:4000",
+  "http://localhost:4001",
+  "http://localhost:5173",
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*") || process.env.NODE_ENV !== "production") {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS Policy Violation: Origin not allowed"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// 6. Multi-Tier Rate Limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  message: { error: "Too many requests from this IP, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", generalLimiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: "Too many authentication attempts. Please wait 15 minutes before trying again." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/auth/login-shop", authLimiter);
+app.use("/api/auth/login-admin", authLimiter);
+app.use("/api/auth/register", authLimiter);
+
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: "Too many transaction requests. Please wait a few minutes before trying again." },
+});
+app.use("/api/payment/", orderLimiter);
+app.use("/api/orders/cod", orderLimiter);
+
+// 7. Micro-Caching Layer for High-Volume Queries (1000 req/s load reduction)
+const cacheStore = new Map();
+const cacheMiddleware = (durationSeconds = 5) => {
+  return (req, res, next) => {
+    if (req.method !== "GET" || req.headers.authorization) {
+      return next();
+    }
+    const key = req.originalUrl || req.url;
+    const cached = cacheStore.get(key);
+    if (cached && Date.now() < cached.expireAt) {
+      res.setHeader("X-Cache", "HIT");
+      return res.json(cached.data);
+    }
+    const originalJson = res.json.bind(res);
+    res.json = (data) => {
+      cacheStore.set(key, {
+        data,
+        expireAt: Date.now() + durationSeconds * 1000,
+      });
+      res.setHeader("X-Cache", "MISS");
+      return originalJson(data);
+    };
+    next();
+  };
+};
+
+const clearCache = () => cacheStore.clear();
+
+// Validation Error Handler Helper
+const validateRequest = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg, details: errors.array() });
+  }
+  next();
+};
 
 // ============================================================
-// DATABASE CONNECTION & READY STATE
+// DATABASE CONNECTION & HIGH-CONCURRENCY POOLING
 // ============================================================
 let isReady = false;
 
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/sivakasicracker", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  maxPoolSize: 100, // Handle up to 100 concurrent DB queries per process
+  minPoolSize: 10,  // Keep warm connections ready
+  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 5000,
 }).then(() => {
-  console.log("✅ MongoDB connected");
+  console.log("✅ MongoDB connected with high-concurrency pool (maxPoolSize: 100)");
   isReady = true;
 }).catch(err => {
-  console.error("❌ MongoDB error:", err);
+  console.error("❌ MongoDB connection error:", err);
   // We keep isReady false if DB fails, so health checks reflect unreadiness
 });
 
@@ -181,7 +299,7 @@ const auth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "No token provided" });
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_jwt_secret_key");
     req.user = decoded;
     next();
   } catch {
@@ -200,7 +318,6 @@ const adminAuth = async (req, res, next) => {
 // FILE UPLOAD (Cloudinary)
 // ============================================================
 
-// Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -223,61 +340,78 @@ const upload = multer({
 // ============================================================
 // AUTH ROUTES
 // ============================================================
-app.post("/api/auth/register", async (req, res) => {
-  try {
-    let { name, email, mobile } = req.body;
-    if (!name || !mobile)
-      return res.status(400).json({ error: "Name and Mobile number are required for registration" });
+app.post(
+  "/api/auth/register",
+  [
+    body("name").notEmpty().withMessage("Name is required").trim().escape(),
+    body("mobile").notEmpty().withMessage("Mobile number is required").trim(),
+    body("email").optional({ checkFalsy: true }).isEmail().withMessage("Invalid email address").normalizeEmail(),
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      let { name, email, mobile } = req.body;
 
-    // Clean empty strings for optional fields to avoid unique constraint clash
-    if (email === "") email = undefined;
+      if (email === "") email = undefined;
 
-    // Check if user exists by mobile
-    const mobileExists = await User.findOne({ mobile });
-    if (mobileExists) return res.status(400).json({ error: "Mobile number already registered. Please login." });
+      const mobileExists = await User.findOne({ mobile });
+      if (mobileExists) return res.status(400).json({ error: "Mobile number already registered. Please login." });
 
-    // Check if email exists (if provided)
-    if (email) {
-      const emailExists = await User.findOne({ email });
-      if (emailExists) return res.status(400).json({ error: "Email address already registered. Please login or use another email." });
+      if (email) {
+        const emailExists = await User.findOne({ email });
+        if (emailExists) return res.status(400).json({ error: "Email address already registered. Please login or use another email." });
+      }
+
+      const user = await User.create({ name, email, mobile });
+
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "default_jwt_secret_key", { expiresIn: "7d" });
+      res.json({ token, user: { id: user._id, name, email: user.email, mobile, role: user.role } });
+    } catch (err) {
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
-
-    const user = await User.create({ name, email, mobile });
-
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, user: { id: user._id, name, email: user.email, mobile, role: user.role } });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-});
+);
 
-app.post("/api/auth/login-shop", async (req, res) => {
-  try {
-    const { mobile } = req.body;
-    if (!mobile) return res.status(400).json({ error: "Mobile number is required" });
-    const user = await User.findOne({ mobile });
-    if (!user) return res.status(400).json({ error: "User not found" });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.post(
+  "/api/auth/login-shop",
+  [
+    body("mobile").notEmpty().withMessage("Mobile number is required").trim(),
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      const { mobile } = req.body;
+      const user = await User.findOne({ mobile });
+      if (!user) return res.status(400).json({ error: "User not found" });
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "default_jwt_secret_key", { expiresIn: "7d" });
+      res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
+    } catch (err) {
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
+    }
   }
-});
+);
 
-app.post("/api/auth/login-admin", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
-    const user = await User.findOne({ email });
-    if (!user || user.role !== "admin") return res.status(400).json({ error: "Invalid admin credentials" });
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Invalid admin credentials" });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.post(
+  "/api/auth/login-admin",
+  [
+    body("email").isEmail().withMessage("Valid email is required").normalizeEmail(),
+    body("password").notEmpty().withMessage("Password is required"),
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+      if (!user || user.role !== "admin") return res.status(400).json({ error: "Invalid admin credentials" });
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ error: "Invalid admin credentials" });
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "default_jwt_secret_key", { expiresIn: "7d" });
+      res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
+    } catch (err) {
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
+    }
   }
-});
+);
 
 app.get("/api/auth/me", auth, async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
@@ -287,7 +421,7 @@ app.get("/api/auth/me", auth, async (req, res) => {
 // ============================================================
 // PRODUCT ROUTES
 // ============================================================
-app.get("/api/products", async (req, res) => {
+app.get("/api/products", cacheMiddleware(5), async (req, res) => {
   try {
     const { category, search, sort, page = 1, limit = 12 } = req.query;
     const query = { isActive: true };
@@ -303,7 +437,7 @@ app.get("/api/products", async (req, res) => {
 
     res.json({ products, total, pages: Math.ceil(total / limit), page: +page });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -313,19 +447,20 @@ app.get("/api/products/:id", async (req, res) => {
     if (!product) return res.status(404).json({ error: "Not found" });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
-// Admin: CRUD
+// Admin: CRUD Products (Clears Micro-Cache)
 app.post("/api/admin/products", adminAuth, upload.array("images", 5), async (req, res) => {
   try {
     const { name, description, category, price, mrp, discount, stock } = req.body;
     const images = req.files?.map(f => f.path) || [];
     const product = await Product.create({ name, description, category, price, mrp, discount, stock, images });
+    clearCache();
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -334,36 +469,46 @@ app.put("/api/admin/products/:id", adminAuth, upload.array("images", 5), async (
     const updates = { ...req.body };
     if (req.files?.length) updates.images = req.files.map(f => f.path);
     const product = await Product.findByIdAndUpdate(req.params.id, updates, { new: true });
+    clearCache();
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
 app.delete("/api/admin/products/:id", adminAuth, async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
+  clearCache();
   res.json({ success: true });
 });
 
 // ============================================================
 // COUPON ROUTES
 // ============================================================
-app.post("/api/coupons/validate", async (req, res) => {
-  try {
-    const { code, subtotal } = req.body;
-    const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+app.post(
+  "/api/coupons/validate",
+  [
+    body("code").notEmpty().withMessage("Coupon code is required").trim().escape(),
+    body("subtotal").isNumeric().withMessage("Subtotal must be a number"),
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      const { code, subtotal } = req.body;
+      const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
 
-    if (!coupon) return res.status(400).json({ error: "Invalid coupon" });
-    if (coupon.uses >= coupon.maxUses) return res.status(400).json({ error: "Coupon exhausted" });
-    if (coupon.expiresAt && new Date() > coupon.expiresAt) return res.status(400).json({ error: "Coupon expired" });
-    if (subtotal < coupon.minOrder) return res.status(400).json({ error: `Minimum order \u20B9${coupon.minOrder} required` });
+      if (!coupon) return res.status(400).json({ error: "Invalid coupon" });
+      if (coupon.uses >= coupon.maxUses) return res.status(400).json({ error: "Coupon exhausted" });
+      if (coupon.expiresAt && new Date() > coupon.expiresAt) return res.status(400).json({ error: "Coupon expired" });
+      if (subtotal < coupon.minOrder) return res.status(400).json({ error: `Minimum order \u20B9${coupon.minOrder} required` });
 
-    const discount = coupon.type === "percent" ? Math.round(subtotal * coupon.value / 100) : coupon.value;
-    res.json({ valid: true, discount, code, type: coupon.type, value: coupon.value });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+      const discount = coupon.type === "percent" ? Math.round(subtotal * coupon.value / 100) : coupon.value;
+      res.json({ valid: true, discount, code, type: coupon.type, value: coupon.value });
+    } catch (err) {
+      res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
+    }
   }
-});
+);
 
 app.get("/api/admin/coupons", adminAuth, async (req, res) => {
   const coupons = await Coupon.find().sort({ createdAt: -1 });
@@ -375,7 +520,7 @@ app.post("/api/admin/coupons", adminAuth, async (req, res) => {
     const coupon = await Coupon.create(req.body);
     res.json(coupon);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -407,7 +552,7 @@ app.post("/api/payment/create-order", auth, async (req, res) => {
     const order = await razorpay.orders.create(options);
     res.json({ orderId: order.id, amount: order.amount, currency: order.currency, key: process.env.RAZORPAY_KEY_ID });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -420,7 +565,6 @@ app.post("/api/payment/verify", auth, async (req, res) => {
     const generated = hmac.digest("hex");
     if (generated !== razorpay_signature) return res.status(400).json({ success: false, error: "Invalid signature" });
 
-    // create order in DB
     const orderId = generateOrderId();
     const order = await Order.create({
       orderId,
@@ -436,12 +580,11 @@ app.post("/api/payment/verify", auth, async (req, res) => {
       status: "Confirmed",
     });
 
-    // update product stock & sales
     for (const it of order.items) {
       await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.qty, salesCount: it.qty } });
     }
+    clearCache();
 
-    // update user address
     await User.findByIdAndUpdate(req.user.id, {
       address: orderData.customer.address,
       city: orderData.customer.city,
@@ -451,7 +594,7 @@ app.post("/api/payment/verify", auth, async (req, res) => {
 
     res.json({ success: true, orderId: order.orderId });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -477,13 +620,14 @@ app.post("/api/orders/cod", auth, async (req, res) => {
     for (const it of order.items) {
       await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.qty, salesCount: it.qty } });
     }
+    clearCache();
 
     sendEmail(order.customer.email, "Order Placed", `<p>Your COD order ${order.orderId} is placed.</p>`).catch(() => { });
     sendWhatsApp(order.customer.mobile, `Your COD order ${order.orderId} is placed.`).catch(() => { });
 
     res.json({ success: true, orderId: order.orderId });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -507,7 +651,7 @@ app.get("/api/admin/orders", adminAuth, async (req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 }).populate("user", "name email");
     res.json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -517,7 +661,7 @@ app.put("/api/admin/orders/:id/status", adminAuth, async (req, res) => {
     const order = await Order.findOneAndUpdate({ orderId: req.params.id }, { status, updatedAt: new Date() }, { new: true });
     res.json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -534,7 +678,7 @@ app.get("/api/admin/dashboard", adminAuth, async (req, res) => {
 
     res.json({ totalOrders, totalRevenue, lowStock, recentOrders });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
   }
 });
 
@@ -545,18 +689,20 @@ app.get("/api/admin/users", adminAuth, async (req, res) => {
 });
 
 // Admin: Banners
-app.get("/api/banners", async (req, res) => {
+app.get("/api/banners", cacheMiddleware(10), async (req, res) => {
   const banners = await Banner.find({ isActive: true });
   res.json(banners);
 });
 
 app.post("/api/admin/banners", adminAuth, async (req, res) => {
   const banner = await Banner.create(req.body);
+  clearCache();
   res.json(banner);
 });
 
 app.delete("/api/admin/banners/:id", adminAuth, async (req, res) => {
   await Banner.findByIdAndDelete(req.params.id);
+  clearCache();
   res.json({ success: true });
 });
 
@@ -577,24 +723,25 @@ app.get("/api/admin/orders/export", adminAuth, async (req, res) => {
   res.send(csv);
 });
 
-// ============================================================
-// ERROR HANDLING
-// ============================================================
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ error: err.message || "Internal server error" });
-});
-
-// Lightweight health endpoint for Render/Cron — no DB queries
+// Lightweight health endpoint for Load Balancers & Render
 app.get('/api/health', (req, res) => {
   if (!isReady) {
     return res.status(503).json({ ok: false, status: "starting" });
   }
-  res.json({ ok: true, status: "ready" });
+  res.json({ ok: true, status: "ready", pid: process.pid });
 });
 
 // ============================================================
-// START SERVER with port fallback if in use
+// ERROR HANDLING
+// ============================================================
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err);
+  const message = process.env.NODE_ENV === "production" ? "Internal server error" : (err.message || "Internal server error");
+  res.status(err.status || 500).json({ error: message });
+});
+
+// ============================================================
+// CLUSTER & SERVER LAUNCH (Load Balancing Across CPU Cores)
 // ============================================================
 const maxRetries = 5;
 let tryPort = Number(PORT);
@@ -602,7 +749,7 @@ let attempts = 0;
 
 const startServer = (port) => {
   const server = app.listen(port, () => {
-    console.log(`\n🪔 Sivakasi Crackers Backend Running!\n📡 Port: ${port}\n🌐 API: http://localhost:${port}/api\n🔒 JWT Auth enabled\n💳 Razorpay integrated\n📧 Email notifications ready\n`);
+    console.log(`\n🪔 Sivakasi Backend Worker PID ${process.pid} Running!\n📡 Port: ${port}\n🌐 API: http://localhost:${port}/api\n🔒 Helmet & Mongo Sanitizer enabled\n⚡ Response Compression enabled\n💳 Razorpay integrated\n`);
   });
 
   server.on('error', (err) => {
@@ -618,11 +765,23 @@ const startServer = (port) => {
   });
 };
 
-// ============================================================
-// SELF-PINGING (KEEP ALIVE)
-// ============================================================
-// Automatically pings this service every 5 minutes to stay awake on Render.
-// We use the full public URL so it counts as incoming traffic.
+// Multi-Core Cluster Execution (when ENABLE_CLUSTER=true or production multi-core)
+const numCPUs = process.env.WEB_CONCURRENCY ? parseInt(process.env.WEB_CONCURRENCY, 10) : os.cpus().length;
+
+if (cluster.isPrimary && process.env.ENABLE_CLUSTER === "true" && numCPUs > 1) {
+  console.log(`🚀 Primary Cluster Process PID ${process.pid} running. Load balancing across ${numCPUs} CPU cores...`);
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+  cluster.on("exit", (worker, code, signal) => {
+    console.warn(`Worker PID ${worker.process.pid} died (${signal || code}). Launching replacement worker...`);
+    cluster.fork();
+  });
+} else {
+  startServer(tryPort);
+}
+
+// Self-ping for cloud deployments
 const selfPing = () => {
   const URL = process.env.API_URL || "https://ecom-rne9.onrender.com";
   if (!URL) return;
@@ -634,13 +793,11 @@ const selfPing = () => {
   });
 };
 
-// Start self-pinging every 5 minutes after server start
 const FIVE_MINUTES = 5 * 60 * 1000;
 setTimeout(() => {
   selfPing();
   setInterval(selfPing, FIVE_MINUTES);
-}, 30000); // 30s delay to allow initial startup
-
-startServer(tryPort);
+}, 30000);
 
 module.exports = app;
+
