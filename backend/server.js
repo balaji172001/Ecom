@@ -598,37 +598,11 @@ app.post("/api/payment/verify", auth, async (req, res) => {
   }
 });
 
-// COD Order
+// COD Order (Disabled for Firecrackers)
 app.post("/api/orders/cod", auth, async (req, res) => {
-  try {
-    const orderData = req.body;
-    const orderId = generateOrderId();
-    const order = await Order.create({
-      orderId,
-      user: req.user.id,
-      items: orderData.items,
-      customer: orderData.customer,
-      subtotal: orderData.subtotal,
-      deliveryCharge: orderData.deliveryCharge,
-      discount: orderData.discount,
-      total: orderData.total,
-      paymentMethod: "cod",
-      payment: { status: "pending" },
-      status: "Pending",
-    });
-
-    for (const it of order.items) {
-      await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.qty, salesCount: it.qty } });
-    }
-    clearCache();
-
-    sendEmail(order.customer.email, "Order Placed", `<p>Your COD order ${order.orderId} is placed.</p>`).catch(() => { });
-    sendWhatsApp(order.customer.mobile, `Your COD order ${order.orderId} is placed.`).catch(() => { });
-
-    res.json({ success: true, orderId: order.orderId });
-  } catch (err) {
-    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
-  }
+  return res.status(400).json({
+    error: "Cash on Delivery (COD) is not available for firecracker orders due to safety & logistics rules. Please complete your payment via GPay or Razorpay Online Payment."
+  });
 });
 
 // ============================================================

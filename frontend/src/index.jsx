@@ -1077,16 +1077,28 @@ function CartPage({
 // CHECKOUT PAGE
 // ============================================================
 function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
-  const [useSaved, setUseSaved] = useState(!!user?.address);
-  const [form, setForm] = useState({
-    name: user?.name || "",
-    mobile: user?.mobile || "",
-    email: user?.email || "",
-    address: user?.address || "",
-    city: user?.city || "",
-    state: user?.state || "Tamil Nadu",
-    pincode: user?.pincode || ""
-  });
+  const getSavedAddress = () => {
+    const saved = localStorage.getItem("sivakasicracker_saved_address");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.name || parsed.address)) return parsed;
+      } catch (e) { }
+    }
+    return {
+      name: user?.name || "",
+      mobile: user?.mobile || "",
+      email: user?.email || "",
+      address: user?.address || "",
+      city: user?.city || "",
+      state: user?.state || "Tamil Nadu",
+      pincode: user?.pincode || ""
+    };
+  };
+
+  const [useSaved, setUseSaved] = useState(true);
+  const [saveDetails, setSaveDetails] = useState(true);
+  const [form, setForm] = useState(getSavedAddress);
   const [method, setMethod] = useState("gpay");
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
@@ -1094,9 +1106,8 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
   const delivery = subtotal >= 999 ? 0 : 99;
   const total = subtotal + delivery;
 
-  // Update form if user data changes (e.g. initial profile load)
   useEffect(() => {
-    if (user && useSaved) {
+    if (user?.address && !form.address) {
       setForm(p => ({
         ...p,
         name: user.name || p.name,
@@ -1108,7 +1119,7 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
         pincode: user.pincode || p.pincode
       }));
     }
-  }, [user, useSaved]);
+  }, [user]);
 
   const validate = () => {
     const e = {};
@@ -1120,38 +1131,27 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-  const WHATSAPP_NUMBER = "+916374549935"; // GPay & WhatsApp number
+
+  const WHATSAPP_NUMBER = "916374549935";
+
   const handlePayment = () => {
     if (!validate()) return;
     const orderId = "SRBA" + Date.now().toString().slice(-8).toUpperCase();
-    // Build WhatsApp message with full order details
-    const itemsList = cart.map(i => `  • ${i.name} × ${i.qty} = ₹${(i.price * i.qty).toLocaleString("en-IN")}`).join("\n");
-    const paymentLabel = method === "gpay" ? `GPay to ${WHATSAPP_NUMBER} — ₹${total.toLocaleString("en-IN")} (Please pay before delivery)` : `Cash on Delivery — ₹${total.toLocaleString("en-IN")}`;
-    const msg = encodeURIComponent(
-      `🎆 *New Order — Sri Ram Balaji Agency*\n` +
-      `━━━━━━━━━━━━━━━━━━\n` +
-      `*Order ID:* ${orderId}\n` +
-      `*Name:* ${form.name}\n` +
-      `*Mobile:* ${form.mobile}\n` +
-      `*Address:* ${form.address}, ${form.city}, ${form.state} — ${form.pincode}\n` +
-      `━━━━━━━━━━━━━━━━━━\n` +
-      `*Items:*\n${itemsList}\n` +
-      `━━━━━━━━━━━━━━━━━━\n` +
-      `*Delivery:* ${delivery === 0 ? "FREE" : "₹" + delivery}\n` +
-      `*Total:* ₹${total.toLocaleString("en-IN")}\n` +
-      `*Payment:* ${paymentLabel}\n` +
-      `━━━━━━━━━━━━━━━━━━\n` +
-      `Thank you! 🙏`
-    );
+
+    // Auto-save address for future visits
+    if (saveDetails) {
+      localStorage.setItem("sivakasicracker_saved_address", JSON.stringify(form));
+    }
+
+    // Place order directly on the web app
     onPlaceOrder({ ...form, method, total, orderId, items: cart });
-    // Open WhatsApp with order details
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
     onNavigate("success", orderId);
   };
 
   return <div className="idx-style-161">
     <h1 className="idx-style-162">Checkout</h1>
     <p className="idx-style-163">Sri Ram Balaji Agency • Srivilliputtur</p>
+
     {/* Steps */}
     <div className="idx-style-164">
       {["User Details", "Payment"].map((s, i) => <div key={s} className="idx-style-165">
@@ -1195,41 +1195,18 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
     <div className="idx-style-166">
       <div>
         {step === 1 && <div style={cardStyle}>
-          <h3 className="idx-style-167">User Details</h3>
-          {user?.address && <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 20,
-            padding: "12px 15px",
-            background: "rgba(255,215,0,0.05)",
-            border: "1px solid rgba(255,215,0,0.2)",
-            borderRadius: 12,
-            cursor: "pointer"
-          }} onClick={() => setUseSaved(!useSaved)}>
-            <div style={{
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              border: "2px solid #FFD700",
-              background: useSaved ? "#FFD700" : "transparent",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#000",
-              fontSize: "0.7rem",
-              fontWeight: 900
-            }}>
-              {useSaved && "✓"}
-            </div>
-            <span style={{ fontSize: "0.85rem", color: "#FFD700", fontWeight: 600 }}>Use Saved Delivery Details</span>
-          </div>}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+            <h3 className="idx-style-167" style={{ margin: 0 }}>User & Delivery Details</h3>
+            {form.address && (
+              <span style={{ fontSize: "0.75rem", color: "#4CAF50", background: "rgba(76,175,80,0.12)", padding: "4px 8px", borderRadius: 6 }}>
+                ✓ Address Remembered
+              </span>
+            )}
+          </div>
 
           <div className="idx-style-168">
-            {[["name", "Full Name", "text"], ["mobile", "Mobile Number", "tel"], ["email", "Email Address (Optional)", "email"], ["address", "Full Address", "text"], ["city", "City", "text"], ["pincode", "Pincode", "text"]].map(([f, l, t]) => <div key={f} style={{
-              gridColumn: f === "address" ? "1/-1" : "auto",
-              opacity: useSaved ? 0.6 : 1,
-              pointerEvents: useSaved ? "none" : "auto"
+            {[["name", "Full Name", "text"], ["mobile", "Mobile Number", "tel"], ["email", "Email Address (Optional)", "email"], ["address", "Full Delivery Address", "text"], ["city", "City", "text"], ["pincode", "Pincode", "text"]].map(([f, l, t]) => <div key={f} style={{
+              gridColumn: f === "address" ? "1/-1" : "auto"
             }}>
               <label className="idx-style-169">{l}</label>
               <input type={t} value={form[f]} onChange={e => setForm(p => ({
@@ -1241,10 +1218,8 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
               }} />
               {errors[f] && <div className="idx-style-170">{errors[f]}</div>}
             </div>)}
-            <div className="idx-style-171" style={{
-              opacity: useSaved ? 0.6 : 1,
-              pointerEvents: useSaved ? "none" : "auto"
-            }}>
+
+            <div className="idx-style-171">
               <label className="idx-style-172">State</label>
               <select value={form.state} onChange={e => setForm(p => ({
                 ...p,
@@ -1254,6 +1229,13 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
               </select>
             </div>
           </div>
+
+          {/* Remember Address Checkbox */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, cursor: "pointer" }} onClick={() => setSaveDetails(!saveDetails)}>
+            <input type="checkbox" checked={saveDetails} onChange={() => { }} style={{ accentColor: "#FFD700", width: 16, height: 16 }} />
+            <span style={{ fontSize: "0.82rem", color: "#ddd" }}>Save delivery address for future orders</span>
+          </div>
+
           <button onClick={() => validate() && setStep(2)} style={{
             ...btnStyle("primary"),
             width: "100%",
@@ -1266,7 +1248,26 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
 
         {step === 2 && <div style={cardStyle}>
           <h3 className="idx-style-177">Payment Method</h3>
-          {[["gpay", "📱 GPay", "Pay online via Google Pay"]].map(([val, label, sub]) => <div key={val} onClick={() => setMethod(val)} style={{
+
+          {/* COD Not Available Notice */}
+          <div style={{
+            padding: "12px 16px",
+            background: "rgba(255,82,82,0.1)",
+            border: "1px solid rgba(255,82,82,0.3)",
+            borderRadius: 12,
+            marginBottom: 16,
+            color: "#FF8A80",
+            fontSize: "0.85rem",
+            lineHeight: "1.4"
+          }}>
+            🚫 <strong>Cash on Delivery (COD) is NOT Available</strong><br />
+            Due to firecracker transport safety regulations, COD is not accepted. Please pay online via GPay.
+          </div>
+
+          {/* GPay / UPI Payment Choice Only */}
+          {[
+            ["gpay", "📱 GPay / UPI", "Pay online via Google Pay / PhonePe / Paytm / BHIM"]
+          ].map(([val, label, sub]) => <div key={val} onClick={() => setMethod(val)} style={{
             display: "flex",
             alignItems: "flex-start",
             gap: 14,
@@ -1274,37 +1275,71 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
             borderRadius: 12,
             marginBottom: 11,
             cursor: "pointer",
-            border: `2px solid ${method === val ? "#FFD700" : "rgba(255,255,255,0.07)"}`,
-            background: method === val ? "rgba(255,215,0,0.06)" : "transparent",
+            border: `2px solid #FFD700`,
+            background: "rgba(255,215,0,0.06)",
             transition: "all 0.2s"
           }}>
             <div style={{
               width: 20,
               height: 20,
               borderRadius: "50%",
-              border: `2px solid ${method === val ? "#FFD700" : "#444"}`,
+              border: `2px solid #FFD700`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
               marginTop: 2
             }}>
-              {method === val && <div className="idx-style-178" />}
+              <div className="idx-style-178" />
             </div>
             <div>
               <div className="idx-style-179">{label}</div>
               <div className="idx-style-180">{sub}</div>
-              {val === "gpay" && method === "gpay" && <div style={{ marginTop: 12, padding: "12px 16px", background: "rgba(255,215,0,0.07)", borderRadius: 10, border: "1px solid rgba(255,215,0,0.2)" }}>
-                <div style={{ fontSize: "1rem", color: "#FFD700", fontWeight: 700, marginBottom: 4 }}>📲 GPay Number</div>
-                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>{WHATSAPP_NUMBER}</div>
-                <div style={{ fontSize: "0.78rem", color: "#aaa", marginTop: 6 }}>Send ₹{total.toLocaleString("en-IN")} to this number on GPay — screenshot will be collected via WhatsApp</div>
-              </div>}
+              <div style={{ marginTop: 12, padding: "12px 16px", background: "rgba(255,215,0,0.07)", borderRadius: 10, border: "1px solid rgba(255,215,0,0.2)" }}>
+                <div style={{ fontSize: "1rem", color: "#FFD700", fontWeight: 700, marginBottom: 4 }}>📲 GPay / PhonePe Number</div>
+                <div style={{ fontSize: "1.4rem", color: "#fff", fontWeight: 800, letterSpacing: 2 }}>+91 63745 49935</div>
+                <div style={{ fontSize: "0.78rem", color: "#aaa", marginTop: 6 }}>Send total ₹{total.toLocaleString("en-IN")} to this GPay number to complete order payment</div>
+              </div>
             </div>
           </div>)}
-          <div className="idx-style-183">
-            ⚠️ Sale of fireworks to minors is prohibited by law. By
-            proceeding, you confirm you are 18+ years old.
+
+          {/* Delivery Fee Notice (Seasonal & Distance based) */}
+          <div style={{
+            padding: "12px 16px",
+            background: "rgba(255, 215, 0, 0.08)",
+            border: "1px solid rgba(255, 215, 0, 0.25)",
+            borderRadius: 12,
+            marginTop: 14,
+            marginBottom: 14
+          }}>
+            <div style={{ color: "#FFD700", fontWeight: 700, fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 6 }}>
+              🚚 Delivery Charge Notice
+            </div>
+            <div style={{ fontSize: "0.8rem", color: "#ddd", marginTop: 4, lineHeight: "1.4" }}>
+              Delivery charges vary based on <strong>seasonal demand, destination city, and distance (km)</strong>. Once confirmed on web, your itemized final receipt will be shared via <strong>WhatsApp</strong>.
+            </div>
           </div>
+
+          {/* Safe Delivery Responsibility Guarantee */}
+          <div style={{
+            padding: "12px 16px",
+            background: "rgba(76, 175, 80, 0.1)",
+            border: "1px solid rgba(76, 175, 80, 0.3)",
+            borderRadius: 12,
+            marginBottom: 16
+          }}>
+            <div style={{ color: "#81C784", fontWeight: 700, fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 6 }}>
+              🛡️ 100% Safe Delivery Guaranteed!
+            </div>
+            <div style={{ fontSize: "0.8rem", color: "#C8E6C9", marginTop: 4, lineHeight: "1.4" }}>
+              Delivering your product safely is <strong>our complete responsibility</strong>. Safe transport and intact package delivery are 100% guaranteed.
+            </div>
+          </div>
+
+          <div className="idx-style-183">
+            ⚠️ Sale of fireworks to minors is prohibited by law. By proceeding, you confirm you are 18+ years old.
+          </div>
+
           <div className="idx-style-184">
             <button onClick={() => setStep(1)} style={{
               ...btnStyle("ghost"),
@@ -1319,7 +1354,7 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
               padding: "12px",
               fontSize: "0.86rem"
             }}>
-              {method === "gpay" ? `✅ I've Paid on GPay — Send Order on WhatsApp` : `📦 Place COD Order — Send via WhatsApp`}
+              🎉 Confirm & Place Order Now
             </button>
           </div>
         </div>}
@@ -1350,19 +1385,32 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
             </span>
           </div>)}
         </div>
+
         <div className="idx-style-190">
           <div className="idx-style-191">
-            <span>Delivery</span>
-            <span style={{
-              color: delivery === 0 ? "#4CAF50" : "#ccc"
-            }}>
-              {delivery === 0 ? "FREE" : "₹" + delivery}
+            <span>Delivery Charge</span>
+            <span style={{ color: "#FFD700", fontSize: "0.78rem" }}>
+              Varies by Season & KM (Receipt on WhatsApp)
             </span>
           </div>
           <div className="idx-style-192">
-            <span>Total</span>
+            <span>Item Total</span>
             <span>₹{total.toLocaleString("en-IN")}</span>
           </div>
+        </div>
+
+        <div style={{
+          marginTop: 14,
+          padding: "10px 12px",
+          background: "rgba(76,175,80,0.08)",
+          border: "1px dashed rgba(76,175,80,0.3)",
+          borderRadius: 8,
+          fontSize: "0.76rem",
+          color: "#A5D6A7",
+          lineHeight: "1.3",
+          textAlign: "center"
+        }}>
+          🛡️ Delivering your product safely is <strong>our responsibility</strong>.
         </div>
       </div>
     </div>
@@ -1370,38 +1418,70 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
 }
 
 // ============================================================
-// ORDER SUCCESS
+// ORDER SUCCESS PAGE
 // ============================================================
 function OrderSuccessPage({
   orderId,
   onNavigate
 }) {
+  const WHATSAPP_NUMBER = "916374549935";
+  const waMsg = encodeURIComponent(
+    `🎆 *Sri Ram Balaji Agency — Order Copy*\n` +
+    `Order ID: ${orderId}\n` +
+    `Hi! I have placed an order on your website (Order ID: ${orderId}). Please confirm delivery charge and receipt.`
+  );
+
   return <div className="idx-style-193">
     <div className="idx-style-194"><Flame size={64} color="#FFD700" /></div>
-    <h1 className="idx-style-195">Order Placed!</h1>
+    <h1 className="idx-style-195">Order Placed Successfully!</h1>
     <p className="idx-style-196">
       Thank you for shopping with Sri Ram Balaji Agency 🙏
     </p>
+
     <div className="idx-style-197">
       <div className="idx-style-198">Order ID</div>
       <div className="idx-style-199">{orderId}</div>
-      <div className="idx-style-200">
-        Your order details have been sent to WhatsApp ✅
+      <div className="idx-style-200" style={{ color: "#81C784", marginTop: 8 }}>
+        ✅ Your order is confirmed on our website!
       </div>
     </div>
+
+    {/* Safe Delivery Guarantee Banner */}
+    <div style={{
+      maxWidth: 500,
+      margin: "0 auto 24px auto",
+      padding: "14px 18px",
+      background: "rgba(76, 175, 80, 0.12)",
+      border: "1px solid rgba(76, 175, 80, 0.4)",
+      borderRadius: 14,
+      textAlign: "center"
+    }}>
+      <div style={{ color: "#81C784", fontWeight: 700, fontSize: "0.95rem", marginBottom: 4 }}>
+        🛡️ 100% Safe Delivery Guaranteed!
+      </div>
+      <div style={{ fontSize: "0.82rem", color: "#C8E6C9", lineHeight: "1.4" }}>
+        Delivering your product safely is <strong>our complete responsibility</strong>. Exact delivery charge (calculated based on season and distance in km) will be updated on your receipt.
+      </div>
+    </div>
+
     <div className="idx-style-201">
-      {[[<CheckCircle size={24} />, "Order Confirmed", "Details sent on WhatsApp"], [<Truck size={24} />, "3–5 Days", "Estimated delivery"], [<ClipboardList size={24} />, "Order Summary", "View your items below"]].map(([icon, t, d]) => <div key={t} className="idx-style-202">
+      {[
+        [<CheckCircle size={24} />, "Order Confirmed", "Saved directly on website"],
+        [<Truck size={24} />, "Distance / KM Pricing", "Seasonal delivery fee calculated"],
+        [<ClipboardList size={24} />, "100% Responsible", "Safe product delivery guaranteed"]
+      ].map(([icon, t, d]) => <div key={t} className="idx-style-202">
         <div className="idx-style-203" style={{ color: '#FFD700', display: 'flex', justifyContent: 'center' }}>{icon}</div>
         <div className="idx-style-204">{t}</div>
         <div className="idx-style-205">{d}</div>
       </div>)}
     </div>
-    <div className="idx-style-206">
-      <button onClick={() => onNavigate("home")} style={btnStyle("primary")}>
-        🏠 Back to Home
+
+    <div className="idx-style-206" style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10, maxWidth: 400, margin: "24px auto 0 auto" }}>
+      <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`, "_blank")} style={{ ...btnStyle("primary"), width: "100%", padding: "12px", background: "#25D366", borderColor: "#25D366" }}>
+        📱 Send Order Copy on WhatsApp (Optional)
       </button>
-      <button onClick={() => window.open("https://wa.me/916374549935", "_blank")} style={btnStyle("outline")}>
-        📱 Chat on WhatsApp
+      <button onClick={() => onNavigate("home")} style={{ ...btnStyle("outline"), width: "100%", padding: "12px" }}>
+        🏠 Back to Home
       </button>
     </div>
   </div>;
@@ -1683,6 +1763,280 @@ function Walkthrough() {
 }
 
 // ============================================================
+// AI SUPPORT AGENT & QUICK WHATSAPP CHAT WIDGET
+// ============================================================
+function AiSupportAgent() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      sender: "bot",
+      text: "👋 Welcome to Sri Ram Balaji Agency! How can I assist you with your cracker order today?",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+  const [input, setInput] = useState("");
+  const WHATSAPP_NUMBER = "916374549935";
+
+  const faqs = [
+    {
+      q: "📦 How to Track Order?",
+      a: "Orders are processed within 24 hours! Your order details & receipt are confirmed directly on our website. You can also chat on WhatsApp (+916374549935)."
+    },
+    {
+      q: "🚚 Delivery Charge & Time?",
+      a: "Delivery takes 3–5 business days. Delivery fees vary based on season & distance (km) and are sent via WhatsApp receipt."
+    },
+    {
+      q: "💥 Discounts & Price List?",
+      a: "We offer up to 50% discount on all original Sivakasi crackers with direct factory rates!"
+    },
+    {
+      q: "🛡️ Safe Delivery Guarantee?",
+      a: "100% Safe Transport Guaranteed! Delivering your crackers safely without breakage is OUR COMPLETE RESPONSIBILITY."
+    },
+    {
+      q: "📱 GPay Payment Help",
+      a: "Send GPay payment to +916374549935. Once paid, your order is confirmed directly on web!"
+    }
+  ];
+
+  const handleSend = (userText) => {
+    const txt = userText || input;
+    if (!txt.trim()) return;
+
+    const userMsg = {
+      sender: "user",
+      text: txt,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    if (!userText) setInput("");
+
+    setTimeout(() => {
+      let botReply = "Thank you for reaching out! For instant personal assistance, you can also chat with our support team directly on WhatsApp (+916374549935).";
+      const lower = txt.toLowerCase();
+
+      if (lower.includes("track") || lower.includes("status")) {
+        botReply = "📦 Orders are processed quickly! You can view your placed orders under 'My Orders' or contact us on WhatsApp for live tracking updates.";
+      } else if (lower.includes("delivery") || lower.includes("km") || lower.includes("charge") || lower.includes("fee")) {
+        botReply = "🚚 Delivery charges vary based on seasonal demand & distance (km). Once confirmed on web, your itemized final receipt will be sent via WhatsApp!";
+      } else if (lower.includes("pay") || lower.includes("gpay") || lower.includes("cod")) {
+        botReply = "📱 We accept GPay / UPI payments to +916374549935. Note: Cash on Delivery (COD) is unavailable due to firecracker transport rules.";
+      } else if (lower.includes("guarantee") || lower.includes("safe") || lower.includes("damage")) {
+        botReply = "🛡️ 100% Safe Delivery Guaranteed! Delivering your product intact is completely OUR RESPONSIBILITY.";
+      }
+
+      setMessages(prev => [...prev, {
+        sender: "bot",
+        text: botReply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    }, 600);
+  };
+
+  return (
+    <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>
+      {/* Floating Button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          style={{
+            width: 58,
+            height: 58,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #FF6B35, #FFD700)",
+            border: "2px solid rgba(255,255,255,0.4)",
+            boxShadow: "0 8px 24px rgba(255, 107, 53, 0.45)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#000",
+            transition: "transform 0.2s"
+          }}
+          title="AI Assistant & WhatsApp Support"
+        >
+          <Sparkles size={28} />
+          <div style={{
+            position: "absolute",
+            top: 2,
+            right: 2,
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            background: "#4CAF50",
+            border: "2px solid #000"
+          }} />
+        </button>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div style={{
+          width: 360,
+          maxWidth: "calc(100vw - 32px)",
+          height: 480,
+          maxHeight: "calc(100vh - 100px)",
+          background: "rgba(18, 10, 30, 0.96)",
+          border: "1px solid rgba(255, 215, 0, 0.25)",
+          borderRadius: 20,
+          boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          backdropFilter: "blur(12px)"
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "14px 16px",
+            background: "linear-gradient(135deg, rgba(255,107,53,0.2), rgba(255,215,0,0.15))",
+            borderBottom: "1px solid rgba(255,215,0,0.15)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg,#FF6B35,#FFD700)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#000"
+              }}>
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: "0.92rem", fontWeight: 700, color: "#FFD700" }}>Sparkle AI Assistant</div>
+                <div style={{ fontSize: "0.72rem", color: "#81C784", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#81C784", display: "inline-block" }} /> Online & Ready
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: "1.2rem" }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex: 1, padding: 14, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+            {messages.map((m, idx) => (
+              <div
+                key={idx}
+                style={{
+                  alignSelf: m.sender === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "82%",
+                  padding: "10px 14px",
+                  borderRadius: m.sender === "user" ? "16px 16px 2px 16px" : "16px 16px 16px 2px",
+                  background: m.sender === "user" ? "linear-gradient(135deg, #FF6B35, #FF8E53)" : "rgba(255,255,255,0.08)",
+                  color: "#fff",
+                  fontSize: "0.82rem",
+                  lineHeight: "1.4"
+                }}
+              >
+                {m.text}
+                <div style={{ fontSize: "0.65rem", color: m.sender === "user" ? "rgba(255,255,255,0.7)" : "#777", marginTop: 4, textAlign: "right" }}>
+                  {m.time}
+                </div>
+              </div>
+            ))}
+
+            {/* Quick Action Chips */}
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontSize: "0.72rem", color: "#888", marginBottom: 6 }}>Quick Questions:</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {faqs.map((f, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSend(f.q)}
+                    style={{
+                      padding: "6px 10px",
+                      background: "rgba(255,215,0,0.06)",
+                      border: "1px solid rgba(255,215,0,0.2)",
+                      borderRadius: 14,
+                      color: "#FFD700",
+                      fontSize: "0.74rem",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {f.q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Direct WhatsApp Button & Input */}
+          <div style={{ padding: 12, borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.3)" }}>
+            <button
+              onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}`, "_blank")}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                marginBottom: 8,
+                background: "#25D366",
+                border: "none",
+                borderRadius: 10,
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                cursor: "pointer"
+              }}
+            >
+              💬 Open Instant WhatsApp Chat
+            </button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <input
+                type="text"
+                value={input}
+                placeholder="Ask a question..."
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSend()}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 8,
+                  color: "#fff",
+                  fontSize: "0.82rem",
+                  outline: "none"
+                }}
+              />
+              <button
+                onClick={() => handleSend()}
+                style={{
+                  padding: "8px 14px",
+                  background: "#FF6B35",
+                  border: "none",
+                  borderRadius: 8,
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  cursor: "pointer"
+                }}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // APP ROOT
 // ============================================================
 export default function ShopApp() {
@@ -1837,43 +2191,6 @@ export default function ShopApp() {
 
   const shared = { onAddToCart, onNavigate, banners };
   return <div className="idx-style-250">
-    <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        html, body { overflow-x: hidden; width: 100%; position: relative; }
-
-        ::-webkit-scrollbar { width:5px; }
-        ::-webkit-scrollbar-track { background:#080018; }
-        ::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.22); border-radius:3px; }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-        @keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
-        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-        @keyframes popIn { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-        input:focus, select:focus { border-color:rgba(255,215,0,0.42) !important; box-shadow:0 0 0 2px rgba(255,215,0,0.08); }
-
-        /* Banner Slider Styles */
-        .banner-slider { position:relative; width:100%; height:420px; overflow:hidden; border-radius:30px; margin-bottom:40px; }
-        .banner-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.8s ease; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; }
-        .banner-slide.active { opacity:1; }
-        .banner-overlay { position:absolute; inset:0; background:linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%); }
-        .banner-content { position:relative; z-index:2; text-align:left; max-width:600px; padding:0 40px; animation: slideIn 0.8s ease; }
-        .banner-emoji { font-size:4rem; margin-bottom:10px; display:block; filter:drop-shadow(0 0 10px rgba(255,215,0,0.4)); }
-        .banner-title { font-family:'Cinzel', serif; font-size:3.2rem; color:#FFD700; line-height:1.1; margin-bottom:15px; text-shadow:2px 2px 10px rgba(0,0,0,0.5); }
-        .banner-subtitle { font-family:'Playfair Display', serif; font-size:1.3rem; color:#AAA; margin-bottom:25px; }
-        .banner-btn { background:linear-gradient(135deg,#FF6B35,#FFD700); color:#000; border:none; padding:12px 30px; border-radius:12px; font-weight:900; font-family:'Cinzel', serif; cursor:pointer; font-size:1rem; transition:transform 0.2s; }
-        .banner-btn:hover { transform: scale(1.05); }
-        .banner-dots { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:3; }
-        .banner-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; transition:all 0.3s; }
-        .banner-dot.active { background:#FFD700; width:30px; border-radius:10px; }
-        @media (max-width:768px) {
-          .banner-slider { height:320px; border-radius:20px; }
-          .banner-title { font-size:2rem; }
-          .banner-subtitle { font-size:1rem; }
-          .banner-emoji { font-size:2.5rem; }
-        }
-      `}</style>
-
     <FireworksCanvas />
     <Navbar page={page} cart={cart} onNavigate={onNavigate} user={user} onLogout={onLogout} />
 
@@ -1955,6 +2272,7 @@ export default function ShopApp() {
 
     {/* AUTH MODALS — appear as overlay, don't navigate away */}
 
+    <AiSupportAgent />
     <Walkthrough />
     {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
   </div>;

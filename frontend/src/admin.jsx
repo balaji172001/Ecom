@@ -124,12 +124,6 @@ function AdminLogin({ onLogin }) {
   };
   return (
     <div className="adm-style-1">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:wght@400;600&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-      `}</style>
 
       {/* BG */}
       <div className="adm-style-2" />
@@ -259,7 +253,7 @@ function Sidebar({ active, onNav, collapsed, onToggle }) {
                   ? "linear-gradient(135deg,rgba(255,107,53,0.3),rgba(255,215,0,0.15))"
                   : "transparent",
               color: active === id ? "#FFD700" : "#888",
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Outfit', sans-serif",
               fontSize: "0.8rem",
               fontWeight: active === id ? 700 : 400,
               transition: "all 0.2s",
@@ -458,14 +452,6 @@ function Dashboard({ products, orders, refreshData, lastUpdated, onNav }) {
       </div>
 
 
-      <style>{`
-        .live-pulse { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; display: inline-block; animation: adrenaline 1.5s infinite; }
-        @keyframes adrenaline { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.6); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
-        .op-card-mini { background: rgba(255,255,255,0.03); padding: 15px; borderRadius: 12px; border: 1px solid rgba(255,215,0,0.05); cursor: pointer; transition: 0.2s; }
-        .op-card-mini:hover { background: rgba(255,107,53,0.08); transform: translateY(-3px); border-color: rgba(255,215,0,0.25); }
-        .moment-bar:hover .moment-tooltip { opacity: 1; }
-        .moment-tooltip { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #000; padding: 2px 5px; border-radius: 3px; font-size: 0.55rem; font-weight: 800; opacity: 0; transition: 0.2s; white-space: nowrap; }
-      `}</style>
     </div>
   );
 }
@@ -1604,7 +1590,7 @@ const labelStyle = {
   marginBottom: 6,
 };
 const pageTitle = {
-  fontFamily: "'Cinzel', serif",
+  fontFamily: "'Outfit', sans-serif",
   color: "#FFD700",
   fontSize: "1.6rem",
   marginBottom: 0,
@@ -1617,7 +1603,7 @@ const actionBtn = {
   padding: "9px 18px",
   cursor: "pointer",
   fontWeight: 700,
-  fontFamily: "'Cinzel', serif",
+  fontFamily: "'Outfit', sans-serif",
   fontSize: "0.82rem",
 };
 
@@ -1715,12 +1701,6 @@ export default function AdminApp() {
 
   return (
     <div className="adm-style-120" style={{ display: 'flex', minHeight: '100vh', background: '#050010' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:wght@400;600&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:#06020a; } ::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.2); border-radius:3px; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
 
       <Sidebar
         active={page}
