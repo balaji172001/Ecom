@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', 'Outfit', Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -12,6 +15,7 @@ html, body {
   margin: 0;
   padding: 0;
   position: relative;
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
 }
 
 
@@ -45,7 +49,7 @@ html, body {
 }
 
 .idx-style-6 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 2rem;
   margin-bottom: 8px;
@@ -106,7 +110,7 @@ html, body {
 }
 
 .idx-style-13 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.4rem;
   margin-bottom: 4px;
@@ -203,7 +207,7 @@ html, body {
 }
 
 .idx-style-27 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.4rem;
   margin-bottom: 4px;
@@ -297,7 +301,7 @@ html, body {
   color: #ffd700;
   font-size: 0.85rem;
   margin-bottom: 5px;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-39 {
@@ -363,7 +367,7 @@ html, body {
   color: #ffd700;
   text-transform: uppercase;
   margin-bottom: 8px;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-47 {
@@ -432,7 +436,7 @@ html, body {
   font-size: 1.5rem;
   font-weight: 900px;
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-56 {
@@ -471,7 +475,7 @@ html, body {
 .idx-style-61 {
   color: #ffd700;
   font-size: 0.98rem;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 8px;
 }
 
@@ -618,7 +622,7 @@ html, body {
 }
 
 .idx-style-84 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.9rem;
 }
@@ -772,7 +776,7 @@ html, body {
 }
 
 .idx-style-105 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.65rem;
   margin-bottom: 10px;
@@ -799,7 +803,7 @@ html, body {
   font-size: 1.9rem;
   font-weight: 900px;
   color: #ff6b35;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-110 {
@@ -922,7 +926,7 @@ html, body {
 }
 
 .idx-style-128 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.25rem;
   margin-bottom: 18px;
@@ -946,7 +950,7 @@ html, body {
 
 .idx-style-132 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 12px;
 }
 
@@ -967,7 +971,7 @@ html, body {
 
 .idx-style-136 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 12px;
 }
 
@@ -983,7 +987,7 @@ html, body {
 }
 
 .idx-style-139 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 2rem;
   margin-bottom: 26px;
@@ -1024,7 +1028,7 @@ html, body {
 .idx-style-145 {
   color: #ffd700;
   font-weight: 700px;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.86rem;
 }
 
@@ -1088,7 +1092,7 @@ html, body {
 
 .idx-style-154 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 16px;
   font-size: 0.95rem;
 }
@@ -1132,7 +1136,7 @@ html, body {
   font-weight: 900px;
   font-size: 1.1rem;
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 16px;
 }
 
@@ -1150,7 +1154,7 @@ html, body {
 }
 
 .idx-style-162 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.9rem;
   margin-bottom: 6px;
@@ -1183,7 +1187,7 @@ html, body {
 
 .idx-style-167 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 18px;
   font-size: 0.98rem;
 }
@@ -1247,7 +1251,7 @@ html, body {
 
 .idx-style-177 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 18px;
   font-size: 0.98rem;
 }
@@ -1303,7 +1307,7 @@ html, body {
 
 .idx-style-185 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 13px;
   font-size: 0.92rem;
 }
@@ -1350,7 +1354,7 @@ html, body {
   font-weight: 900px;
   color: #ffd700;
   font-size: 1.05rem;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-193 {
@@ -1396,7 +1400,7 @@ html, body {
   color: #ffd700;
   font-size: 1.5rem;
   font-weight: 900px;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-200 {
@@ -1457,7 +1461,7 @@ html, body {
 }
 
 .idx-style-210 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   margin-top: 8px;
   font-size: 1.35rem;
@@ -1538,7 +1542,7 @@ html, body {
 
 .idx-style-224 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   margin-bottom: 12px;
 }
 
@@ -1559,7 +1563,7 @@ html, body {
 
 .idx-style-228 {
   color: #ffd700;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 .idx-style-229 {
@@ -1574,7 +1578,7 @@ html, body {
 }
 
 .idx-style-231 {
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   color: #ffd700;
   font-size: 1.9rem;
   margin-bottom: 26px;
@@ -1591,7 +1595,7 @@ html, body {
 .idx-style-233 {
   color: #ffd700;
   font-weight: 700px;
-  font-family: "Cinzel", serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.92rem;
 }
 
@@ -2024,4 +2028,43 @@ html, body {
 .social-link-subtitle-text {
   color: #aaa;
   font-size: 0.9rem;
+}
+
+/* ============================================================
+   EXTRACTED BANNER SLIDER & ANIMATION STYLES
+   ============================================================ */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:#080018; }
+::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.22); border-radius:3px; }
+
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes popIn { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+
+input:focus, select:focus {
+  border-color: rgba(255,215,0,0.42) !important;
+  box-shadow: 0 0 0 2px rgba(255,215,0,0.08);
+}
+
+/* Banner Slider Styles */
+.banner-slider { position:relative; width:100%; height:420px; overflow:hidden; border-radius:30px; margin-bottom:40px; }
+.banner-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.8s ease; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; }
+.banner-slide.active { opacity:1; }
+.banner-overlay { position:absolute; inset:0; background:linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%); }
+.banner-content { position:relative; z-index:2; text-align:left; max-width:600px; padding:0 40px; animation: slideIn 0.8s ease; }
+.banner-emoji { font-size:4rem; margin-bottom:10px; display:block; filter:drop-shadow(0 0 10px rgba(255,215,0,0.4)); }
+.banner-title { font-family:'Cinzel', serif; font-size:3.2rem; color:#FFD700; line-height:1.1; margin-bottom:15px; text-shadow:2px 2px 10px rgba(0,0,0,0.5); }
+.banner-subtitle { font-family:'Playfair Display', serif; font-size:1.3rem; color:#AAA; margin-bottom:25px; }
+.banner-btn { background:linear-gradient(135deg,#FF6B35,#FFD700); color:#000; border:none; padding:12px 30px; border-radius:12px; font-weight:900; font-family:'Cinzel', serif; cursor:pointer; font-size:1rem; transition:transform 0.2s; }
+.banner-btn:hover { transform: scale(1.05); }
+.banner-dots { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:3; }
+.banner-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; transition:all 0.3s; }
+.banner-dot.active { background:#FFD700; width:30px; border-radius:10px; }
+@media (max-width:768px) {
+  .banner-slider { height:320px; border-radius:20px; }
+  .banner-title { font-size:2rem; }
+  .banner-subtitle { font-size:1rem; }
+  .banner-emoji { font-size:2.5rem; }
 }
