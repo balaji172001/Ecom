@@ -2191,8 +2191,6 @@ export default function ShopApp() {
 
   const shared = { onAddToCart, onNavigate, banners };
   return <div className="idx-style-250">
-
-
     <FireworksCanvas />
     <Navbar page={page} cart={cart} onNavigate={onNavigate} user={user} onLogout={onLogout} />
 
