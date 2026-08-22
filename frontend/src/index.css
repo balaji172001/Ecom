@@ -372,7 +372,7 @@ html, body {
 
 .idx-style-47 {
   font-size: clamp(2rem, 6.5vw, 4.8rem);
-  font-family: "Cinzel Decorative", serif;
+  font-family: "Cinzel Decorative", serif !important;
   background: linear-gradient(135deg, #ffd700 0%, #ff6b35 50%, #ff1744 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -599,7 +599,7 @@ html, body {
 }
 
 .idx-style-81 {
-  padding: 80px 20px 50px;
+  padding: 80px 20px 20px;
   max-width: 1300px;
   margin: 0 auto;
 }
@@ -722,7 +722,7 @@ html, body {
 }
 
 .idx-style-99 {
-  padding: 80px 20px 60px;
+  padding: 80px 20px 20px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -981,7 +981,7 @@ html, body {
 }
 
 .idx-style-138 {
-  padding: 80px 20px 60px;
+  padding: 80px 20px 20px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -1572,7 +1572,7 @@ html, body {
 }
 
 .idx-style-230 {
-  padding: 80px 20px 60px;
+  padding: 80px 20px 20px;
   max-width: 900px;
   margin: 0 auto;
 }
