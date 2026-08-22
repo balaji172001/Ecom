@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-# Block admin build artifacts
-Disallow: /build-admin/
-Disallow: /build-shop/
-
-Sitemap: https://www.rambalajishop.shop/sitemap.xml
