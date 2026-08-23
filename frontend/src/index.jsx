@@ -1463,6 +1463,18 @@ function OrderSuccessPage({
   }
 
   const waMsg = encodeURIComponent(waText);
+  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`;
+
+  // 5-second countdown then auto-open WhatsApp
+  const [countdown, setCountdown] = useState(5);
+  useEffect(() => {
+    if (countdown <= 0) {
+      window.open(waUrl, "_blank");
+      return;
+    }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
 
   return <div className="idx-style-193">
     <div className="idx-style-194"><Flame size={64} color="#FFD700" /></div>
@@ -1508,9 +1520,26 @@ function OrderSuccessPage({
         <div className="idx-style-205">{d}</div>
       </div>)}
     </div>
+
+    {/* Auto-redirect countdown */}
+    <div style={{
+      maxWidth: 400,
+      margin: "20px auto 0 auto",
+      padding: "10px 16px",
+      background: "rgba(37, 211, 102, 0.1)",
+      border: "1px solid rgba(37, 211, 102, 0.3)",
+      borderRadius: 12,
+      textAlign: "center",
+      fontSize: "0.82rem",
+      color: "#81C784"
+    }}>
+      {countdown > 0
+        ? `📱 Redirecting to WhatsApp in ${countdown} second${countdown !== 1 ? "s" : ""}...`
+        : "📱 Opening WhatsApp..."}
+    </div>
  
-    <div className="idx-style-206" style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10, maxWidth: 400, margin: "24px auto 0 auto" }}>
-      <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`, "_blank")} style={{ ...btnStyle("primary"), width: "100%", padding: "12px", background: "#25D366", borderColor: "#25D366" }}>
+    <div className="idx-style-206" style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10, maxWidth: 400, margin: "12px auto 0 auto" }}>
+      <button onClick={() => window.open(waUrl, "_blank")} style={{ ...btnStyle("primary"), width: "100%", padding: "12px", background: "#25D366", borderColor: "#25D366" }}>
         📱 Send Order Copy on WhatsApp
       </button>
       <button onClick={() => onNavigate("home")} style={{ ...btnStyle("outline"), width: "100%", padding: "12px" }}>
@@ -1576,8 +1605,8 @@ function LoginPage({ onLogin, showToast }) {
         {loading ? "Please wait..." : isReg ? "Create Account →" : "Sign In →"}
       </button>
       <div className="idx-style-220" style={{ marginTop: 20 }}>
-        {isReg ? "Have account? " : "New here? "}
-        <span onClick={() => setIsReg(r => !r)} className="idx-style-221">{isReg ? "Sign In" : "Register Now"}</span>
+        {isReg ? "Have account? " : " New here? "}
+        <span onClick={() => setIsReg(r => !r)} className="idx-style-221"> {isReg ? " Sign In" : " Register Now"}</span>
       </div>
     </div>
   </div>;
