@@ -1422,14 +1422,47 @@ function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
 // ============================================================
 function OrderSuccessPage({
   orderId,
-  onNavigate
+  onNavigate,
+  lastOrder
 }) {
   const WHATSAPP_NUMBER = "916374549935";
-  const waMsg = encodeURIComponent(
-    `🎆 *Sri Ram Balaji Agency — Order Copy*\n` +
-    `Order ID: ${orderId}\n` +
-    `Hi! I have placed an order on your website (Order ID: ${orderId}). Please confirm delivery charge and receipt.`
-  );
+  
+  // Build detailed WhatsApp message
+  const order = lastOrder && lastOrder.orderId === orderId ? lastOrder : null;
+  
+  let waText = `🎆 *Sri Ram Balaji Agency — Order Copy* 🎆\n\n`;
+  if (order) {
+    waText += `*Order ID:* ${order.orderId}\n`;
+    waText += `*Date:* ${new Date(order.createdAt || Date.now()).toLocaleDateString("en-IN")}\n\n`;
+    
+    waText += `👤 *Customer Details:*\n`;
+    waText += `Name: ${order.name || ""}\n`;
+    waText += `Mobile: ${order.mobile || ""}\n`;
+    waText += `Address: ${order.address || ""}, ${order.city || ""}, ${order.state || ""} - ${order.pincode || ""}\n\n`;
+    
+    waText += `📦 *Order Items:*\n`;
+    if (Array.isArray(order.items)) {
+      order.items.forEach((item, index) => {
+        waText += `${index + 1}. ${item.name} (${item.unit || "1 Pack"}) x ${item.qty} = ₹${(item.price * item.qty).toLocaleString("en-IN")}\n`;
+      });
+    }
+    waText += `\n`;
+    
+    const subtotal = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + item.price * item.qty, 0) : (order.total || 0);
+    const delivery = subtotal >= 999 ? 0 : 99;
+    
+    waText += `*Subtotal:* ₹${subtotal.toLocaleString("en-IN")}\n`;
+    waText += `*Delivery Charge:* ${delivery === 0 ? "FREE" : `₹${delivery}`}\n`;
+    waText += `*Total Amount:* ₹${order.total?.toLocaleString("en-IN")}\n\n`;
+    
+    waText += `💳 *Payment Method:* ${order.method === "cod" ? "Cash on Delivery" : "GPay / Online Payment"}\n\n`;
+    waText += `Hi! I have placed an order on your website. Please confirm delivery charge and receipt.`;
+  } else {
+    waText += `Order ID: ${orderId}\n`;
+    waText += `Hi! I have placed an order on your website (Order ID: ${orderId}). Please confirm delivery charge and receipt.`;
+  }
+
+  const waMsg = encodeURIComponent(waText);
 
   return <div className="idx-style-193">
     <div className="idx-style-194"><Flame size={64} color="#FFD700" /></div>
@@ -1437,7 +1470,7 @@ function OrderSuccessPage({
     <p className="idx-style-196">
       Thank you for shopping with Sri Ram Balaji Agency 🙏
     </p>
-
+ 
     <div className="idx-style-197">
       <div className="idx-style-198">Order ID</div>
       <div className="idx-style-199">{orderId}</div>
@@ -1445,7 +1478,7 @@ function OrderSuccessPage({
         ✅ Your order is confirmed on our website!
       </div>
     </div>
-
+ 
     {/* Safe Delivery Guarantee Banner */}
     <div style={{
       maxWidth: 500,
@@ -1463,7 +1496,7 @@ function OrderSuccessPage({
         Delivering your product safely is <strong>our complete responsibility</strong>. Exact delivery charge (calculated based on season and distance in km) will be updated on your receipt.
       </div>
     </div>
-
+ 
     <div className="idx-style-201">
       {[
         [<CheckCircle size={24} />, "Order Confirmed", "Saved directly on website"],
@@ -1475,10 +1508,10 @@ function OrderSuccessPage({
         <div className="idx-style-205">{d}</div>
       </div>)}
     </div>
-
+ 
     <div className="idx-style-206" style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10, maxWidth: 400, margin: "24px auto 0 auto" }}>
       <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`, "_blank")} style={{ ...btnStyle("primary"), width: "100%", padding: "12px", background: "#25D366", borderColor: "#25D366" }}>
-        📱 Send Order Copy on WhatsApp (Optional)
+        📱 Send Order Copy on WhatsApp
       </button>
       <button onClick={() => onNavigate("home")} style={{ ...btnStyle("outline"), width: "100%", padding: "12px" }}>
         🏠 Back to Home
@@ -1822,7 +1855,7 @@ function AiSupportAgent() {
       } else if (lower.includes("delivery") || lower.includes("km") || lower.includes("charge") || lower.includes("fee")) {
         botReply = "🚚 Delivery charges vary based on seasonal demand & distance (km). Once confirmed on web, your itemized final receipt will be sent via WhatsApp!";
       } else if (lower.includes("pay") || lower.includes("gpay") || lower.includes("cod")) {
-        botReply = "📱 We accept GPay / UPI payments to +916374549935. Note: Cash on Delivery (COD) is unavailable due to firecracker transport rules.";
+        botReply = "📱 We accept GPay / UPI payments to +916374549935. Note: Cash on Delivery (COD) is unavailable.";
       } else if (lower.includes("guarantee") || lower.includes("safe") || lower.includes("damage")) {
         botReply = "🛡️ 100% Safe Delivery Guaranteed! Delivering your product intact is completely OUR RESPONSIBILITY.";
       }
@@ -2050,6 +2083,14 @@ export default function ShopApp() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [lastOrder, setLastOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem("srt_last_order");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [toast, setToast] = useState(null);
   const showToast = msg => setToast(msg);
 
@@ -2153,6 +2194,11 @@ export default function ShopApp() {
   const onRemove = id => setCart(c => c.filter(i => i.id !== id));
 
   const onPlaceOrder = async (data) => {
+    const orderData = { ...data, createdAt: new Date().toISOString() };
+    setLastOrder(orderData);
+    try {
+      localStorage.setItem("srt_last_order", JSON.stringify(orderData));
+    } catch (e) {}
     try {
       const res = await fetch(`${API_BASE}/api/orders/cod`, {
         method: "POST",
@@ -2200,7 +2246,7 @@ export default function ShopApp() {
       {page === "product" && <ProductDetailPage productId={productId} products={products} {...shared} />}
       {page === "cart" && <CartPage cart={cart} onUpdate={onUpdate} onRemove={onRemove} onNavigate={onNavigate} />}
       {page === "checkout" && <CheckoutPage cart={cart} onPlaceOrder={onPlaceOrder} onNavigate={onNavigate} user={user} />}
-      {page === "success" && <OrderSuccessPage orderId={orderId} onNavigate={onNavigate} />}
+      {page === "success" && <OrderSuccessPage orderId={orderId} onNavigate={onNavigate} lastOrder={lastOrder} />}
       {page === "login" && <LoginPage onLogin={onLogin} showToast={showToast} />}
       {page === "orders" && <OrdersPage orders={orders} token={token} />}
     </main>
