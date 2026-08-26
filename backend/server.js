@@ -54,7 +54,7 @@ const allowedOrigins = [
   "https://rambalajishop.shop",
   "https://ram-balaji-shop.vercel.app",
   "https://ram-balaji-admin.vercel.app",
-
+// https://ecom-mocha-two.vercel.app/
   process.env.FRONTEND_URL,
   process.env.ADMIN_URL,
   "http://localhost:3000",
@@ -428,21 +428,75 @@ app.get("/api/auth/me", auth, async (req, res) => {
 // ============================================================
 app.get("/api/products", cacheMiddleware(5), async (req, res) => {
   try {
-    const { category, search, sort, page = 1, limit = 12 } = req.query;
-    const query = { isActive: true };
-    if (category && category !== "All") query.category = category;
-    if (search) query.name = { $regex: search, $options: "i" };
+    const {
+      category,
+      search,
+      sort,
+      page = 1,
+      limit = 12,
+    } = req.query;
 
+    // Validate pagination
+    const currentPage = Math.max(parseInt(page, 10) || 1, 1);
+    const perPage = Math.min(
+      Math.max(parseInt(limit, 10) || 12, 1),
+      200
+    );
+
+    // Build query
+    const query = {
+      isActive: true,
+    };
+
+    if (category && category !== "All") {
+      query.category = category;
+    }
+
+    if (search && search.trim()) {
+      query.name = {
+        $regex: search.trim(),
+        $options: "i",
+      };
+    }
+
+    // Build sort
     let sortObj = {};
-    if (sort === "low") sortObj.price = 1;
-    else if (sort === "high") sortObj.price = -1;
 
+    if (sort === "low") {
+      sortObj = { price: 1 };
+    } else if (sort === "high") {
+      sortObj = { price: -1 };
+    } else {
+      // Default sorting
+      sortObj = { createdAt: -1 };
+    }
+
+    // Count products
     const total = await Product.countDocuments(query);
-    const products = await Product.find(query).sort(sortObj).skip((page - 1) * limit).limit(+limit);
 
-    res.json({ products, total, pages: Math.ceil(total / limit), page: +page });
+    // Fetch products
+    const products = await Product.find(query)
+      .sort(sortObj)
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage)
+      .lean();
+
+    res.status(200).json({
+      products,
+      total,
+      pages: Math.ceil(total / perPage),
+      page: currentPage,
+      limit: perPage,
+    });
   } catch (err) {
-    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
+    console.error("GET /api/products error:", err);
+
+    res.status(500).json({
+      error:
+        process.env.NODE_ENV === "production"
+          ? "Internal server error"
+          : err.message,
+    });
   }
 });
 
