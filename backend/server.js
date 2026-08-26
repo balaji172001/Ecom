@@ -50,6 +50,11 @@ app.use(hpp());
 
 // 5. Strict CORS Configuration
 const allowedOrigins = [
+  "https://www.rambalajishop.shop",
+  "https://rambalajishop.shop",
+  "https://ram-balaji-shop.vercel.app",
+  "https://ram-balaji-admin.vercel.app",
+
   process.env.FRONTEND_URL,
   process.env.ADMIN_URL,
   "http://localhost:3000",
