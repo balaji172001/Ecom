@@ -54,7 +54,7 @@ const allowedOrigins = [
   "https://rambalajishop.shop",
   "https://ram-balaji-shop.vercel.app",
   "https://ram-balaji-admin.vercel.app",
-// https://ecom-mocha-two.vercel.app/
+  // https://ecom-mocha-two.vercel.app/
   process.env.FRONTEND_URL,
   process.env.ADMIN_URL,
   "http://localhost:3000",
@@ -406,12 +406,46 @@ app.post(
   async (req, res) => {
     try {
       const { email, password } = req.body;
+
+      console.log("========== ADMIN LOGIN ==========");
+      console.log("Email:", email);
+      console.log("Password received:", !!password);
+
       const user = await User.findOne({ email });
-      if (!user || user.role !== "admin") return res.status(400).json({ error: "Invalid admin credentials" });
+
+      console.log("User found:", !!user);
+
+      if (!user) {
+        console.log("❌ USER NOT FOUND:", email);
+        return res.status(400).json({
+          error: "USER_NOT_FOUND"
+        });
+      }
+
+      console.log("DB email:", user.email);
+      console.log("DB role:", user.role);
+      console.log("DB active:", user.isActive);
+      console.log("Has password:", !!user.password);
+
+      if (user.role !== "admin") {
+        console.log("❌ NOT ADMIN");
+        return res.status(400).json({
+          error: "NOT_ADMIN"
+        });
+      }
+
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json({ error: "Invalid admin credentials" });
-      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "default_jwt_secret_key", { expiresIn: "7d" });
-      res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
+
+      console.log("Password match:", isMatch);
+
+      if (!isMatch) {
+        console.log("❌ PASSWORD DOES NOT MATCH");
+        return res.status(400).json({
+          error: "PASSWORD_NOT_MATCH"
+        });
+      }
+
+      console.log("✅ ADMIN LOGIN SUCCESS");
     } catch (err) {
       res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
