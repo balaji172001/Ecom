@@ -446,6 +446,8 @@ app.post(
       }
 
       console.log("✅ ADMIN LOGIN SUCCESS");
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "default_jwt_secret_key", { expiresIn: "7d" });
+      return res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role } });
     } catch (err) {
       res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
     }
@@ -691,11 +693,56 @@ app.post("/api/payment/verify", auth, async (req, res) => {
   }
 });
 
-// COD Order (Disabled for Firecrackers)
+// COD Order Placement
 app.post("/api/orders/cod", auth, async (req, res) => {
-  return res.status(400).json({
-    error: "Cash on Delivery (COD) is not available for firecracker orders due to safety & logistics rules. Please complete your payment via GPay or Razorpay Online Payment."
-  });
+  try {
+    const { items, customer, subtotal, deliveryCharge, discount, total, orderId: clientOrderId } = req.body;
+
+    const orderId = clientOrderId || generateOrderId();
+
+    const formattedItems = (items || []).map((it) => ({
+      product: mongoose.Types.ObjectId.isValid(it.product) ? it.product : null,
+      name: it.name,
+      price: it.price,
+      qty: it.qty,
+      image: it.image,
+    }));
+
+    const order = await Order.create({
+      orderId,
+      user: req.user ? req.user.id : null,
+      items: formattedItems,
+      customer: customer || {},
+      subtotal: subtotal || total || 0,
+      deliveryCharge: deliveryCharge || 0,
+      discount: discount || 0,
+      total: total || 0,
+      paymentMethod: "cod",
+      status: "Pending",
+      payment: { status: "pending" },
+    });
+
+    for (const it of formattedItems) {
+      if (it.product) {
+        await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.qty, salesCount: it.qty } }).catch(() => {});
+      }
+    }
+    clearCache();
+
+    if (req.user && customer) {
+      await User.findByIdAndUpdate(req.user.id, {
+        address: customer.address,
+        city: customer.city,
+        state: customer.state,
+        pincode: customer.pincode,
+      }).catch(() => {});
+    }
+
+    res.json({ success: true, orderId: order.orderId, order });
+  } catch (err) {
+    console.error("COD Order Error:", err);
+    res.status(500).json({ error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message });
+  }
 });
 
 // ============================================================

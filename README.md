@@ -40,6 +40,11 @@ npm run start:frontend
 npm start
 ```
 
+Shop and admin can be started using
+ `REACT_APP_TARGET=admin npm start` 
+ and 
+ `REACT_APP_TARGET=shop npm start`.
+
 > Notes:
 > - The frontend expects a CRA-style app (react-scripts). If you prefer Next.js, move files to a Next app.
 > - The backend uses `node server.js` to run the Express server.
