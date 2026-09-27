@@ -1,8 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
+
 
 export default function AiSupportAgent() {
   const [isOpen, setIsOpen] = useState(false);
+useEffect(() => {
+  const html = document.documentElement;
+  const body = document.body;
+
+  if (isOpen) {
+    html.style.setProperty("overflow", "hidden", "important");
+    body.style.setProperty("overflow", "hidden", "important");
+  } else {
+    html.style.removeProperty("overflow");
+    body.style.removeProperty("overflow");
+  }
+
+  return () => {
+    html.style.removeProperty("overflow");
+    body.style.removeProperty("overflow");
+  };
+}, [isOpen]);
   const [messages, setMessages] = useState([
     {
       sender: "bot",
@@ -72,6 +90,7 @@ export default function AiSupportAgent() {
         }
       ]);
     }, 600);
+    
   };
 
   return (

@@ -269,14 +269,14 @@ export default function ShopApp() {
       </footer>
 
       {/* WhatsApp floating button */}
-      <a
+      {/* <a
         href="https://wa.me/916374549935?text=Hi! I want to order from Sri Ram Balaji Agency Price List 2025"
         target="_blank"
         rel="noreferrer"
         className="idx-style-265"
       >
         <MessageCircle size={28} />
-      </a>
+      </a> */}
 
       <AiSupportAgent />
       <Walkthrough />
