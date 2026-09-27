@@ -989,3 +989,5 @@
     padding: 16px;
   }
 }
+
+@import "./admin-mobile.css";

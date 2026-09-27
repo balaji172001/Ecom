@@ -1,0 +1,265 @@
+
+
+@media (max-width: 1024px) {
+
+  /* --- 1. GENERAL LAYOUT & CONTAINER --- */
+  .adm-style-120 {
+    flex-direction: column !important;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .adm-style-129 {
+    padding: 16px 14px !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* --- 2. STICKY TOP HEADER --- */
+  .adm-style-121 {
+    padding: 0 14px !important;
+    height: 56px !important;
+    background: rgba(10, 4, 18, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .adm-style-122 {
+    font-size: 0.8rem !important;
+    gap: 6px !important;
+  }
+
+  .adm-style-125 {
+    gap: 8px !important;
+  }
+
+  .adm-style-126 {
+    display: none !important; /* Hide live badge on mobile header for space */
+  }
+
+  .adm-style-127 {
+    display: none !important; /* Hide shop title on small headers */
+  }
+
+  .adm-style-128 {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* --- 3. MOBILE SIDEBAR & OVERLAY DRAWER --- */
+  aside {
+    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(16px) !important;
+    background: rgba(12, 5, 22, 0.98) !important;
+    z-index: 100 !important;
+  }
+
+  aside nav {
+    padding: 12px 8px !important;
+  }
+
+  aside nav button {
+    padding: 12px 14px !important;
+    font-size: 0.88rem !important;
+  }
+
+  /* --- 4. DASHBOARD GRID & METRICS --- */
+  .adm-style-21 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .adm-style-24 {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .adm-style-56 {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .adm-style-60 {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* --- 5. TOP TOOLBARS, SEARCH & FILTERS --- */
+  .adm-style-39,
+  .adm-style-54,
+  .adm-style-74,
+  .adm-style-86,
+  .adm-style-102 {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .adm-style-40,
+  .adm-style-41 {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .adm-style-40 input,
+  .adm-style-40 select,
+  .adm-style-41 select,
+  .adm-style-54 input,
+  .adm-style-74 input,
+  .adm-style-86 input,
+  .adm-style-102 input {
+    width: 100% !important;
+    font-size: 16px !important; /* Prevents iOS auto-zoom on input focus */
+  }
+
+  /* --- 6. ORDERS PAGE RESPONSIVE CARDS --- */
+  .adm-style-43 {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .adm-style-44 {
+    min-width: 100% !important;
+  }
+
+  .adm-style-49 {
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed rgba(255, 215, 0, 0.15) !important;
+  }
+
+  .adm-style-53 {
+    min-width: 100% !important;
+    margin-top: 8px !important;
+  }
+
+  .adm-style-53 select {
+    width: 100% !important;
+    padding: 10px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* --- 7. PRODUCTS PAGE & CATALOG CARDS --- */
+  .adm-style-64 {
+    max-width: 100% !important;
+    height: 140px !important;
+    object-fit: cover !important;
+    width: 100% !important;
+  }
+
+  .adm-style-72 {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .adm-style-73 {
+    padding: 10px !important;
+    text-align: center !important;
+  }
+
+  /* --- 8. FORM MODALS & DIALOGS --- */
+  .adm-style-3 {
+    width: 94% !important;
+    max-width: 440px !important;
+    padding: 24px 18px !important;
+    margin: 12px auto !important;
+    border-radius: 16px !important;
+  }
+
+  .adm-style-89 {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .adm-style-76 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .adm-style-94 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .adm-style-100 {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    margin-top: 8px !important;
+  }
+
+  /* --- 9. DATA TABLES (USERS & COUPONS) --- */
+  .adm-style-104 {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 12px !important;
+  }
+
+  .adm-style-105 {
+    min-width: 640px !important;
+  }
+
+  .adm-style-107,
+  .adm-style-109,
+  .adm-style-110,
+  .adm-style-111,
+  .adm-style-112,
+  .adm-style-113,
+  .adm-style-114,
+  .adm-style-115 {
+    padding: 10px 8px !important;
+    font-size: 0.78rem !important;
+  }
+
+}
+
+/* --- 10. EXTRA SMALL MOBILE SCREENS (<= 600px) --- */
+@media (max-width: 600px) {
+
+  .adm-style-21 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .adm-style-1 {
+    padding: 16px 12px !important;
+  }
+
+  .adm-style-3 {
+    padding: 24px 16px !important;
+  }
+
+  .adm-style-6 {
+    font-size: 1.5rem !important;
+  }
+
+  .adm-style-15 {
+    padding: 14px !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Touch-friendly inputs */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    padding: 12px 14px !important;
+  }
+
+}

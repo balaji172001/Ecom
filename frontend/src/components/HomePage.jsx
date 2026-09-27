@@ -22,50 +22,48 @@ export default function HomePage({ products = [], banners = [], onNavigate, onAd
       {/* DYNAMIC BANNERS */}
       <BannerCarousel banners={banners} />
 
-      {/* HERO (Shown if no banners or as legacy header) */}
-      {!banners.length && (
-        <section className="idx-style-44">
-          <div className="idx-style-46">Sri Gopalsamy Presents</div>
-          <h1 className="idx-style-47">
-            Sri Ram Balaji
-            <br />
-            Agency
-          </h1>
-          <p className="idx-style-48">Premium Quality Fireworks • Price List 2025</p>
-          <p className="idx-style-49">
-            329-H/1, Srivilliputtur to Alangulam Road, Sri Venkateswara Nagar
-            <br />
-            Pillaiyarkulam, P. Ramachatrapuram - 626 137, Srivilliputtur (T.K)
-          </p>
-          <p className="idx-style-50" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <Phone size={16} /> 99407 67763 &nbsp;|&nbsp; 99409 19857
-          </p>
-          <div className="idx-style-51" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <Sparkles size={16} /> Special Offer — Discount UPTO 50% OFF on all products!
-          </div>
-          <div className="idx-style-52">
-            <button onClick={() => onNavigate("products")} style={btnStyle("primary")}>
-              Shop Now <Flame size={18} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "middle" }} />
-            </button>
-            <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
-              View All {products.length} Products <ArrowRight size={16} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "middle" }} />
-            </button>
-          </div>
-          <div className="idx-style-53">
-            {[
-              [`${products.length}+`, "Products"],
-              ["50%", "Max Discount"],
-              ["2025", "Price List"],
-              ["Licensed", "& Certified"],
-            ].map(([n, l]) => (
-              <div key={l} className="idx-style-54">
-                <div className="idx-style-55">{n}</div>
-                <div className="idx-style-56">{l}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* HERO SECTION (Collapsed when banner slider is present) */}
+      <section className={`idx-style-44 ${banners && banners.length > 0 ? "collapsed" : ""}`}>
+        <div className="idx-style-46">Sri Gopalsamy Presents</div>
+        <h1 className="idx-style-47">
+          Sri Ram Balaji
+          <br />
+          Agency
+        </h1>
+        <p className="idx-style-48">Premium Quality Fireworks • Price List 2025</p>
+        <p className="idx-style-49">
+          329-H/1, Srivilliputtur to Alangulam Road, Sri Venkateswara Nagar
+          <br />
+          Pillaiyarkulam, P. Ramachatrapuram - 626 137, Srivilliputtur (T.K)
+        </p>
+        <p className="idx-style-50" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <Phone size={16} /> 99407 67763 &nbsp;|&nbsp; 99409 19857
+        </p>
+        <div className="idx-style-51" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <Sparkles size={16} /> Special Offer — Discount UPTO 50% OFF on all products!
+        </div>
+        <div className="idx-style-52">
+          <button onClick={() => onNavigate("products")} style={btnStyle("primary")}>
+            Shop Now <Flame size={18} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "middle" }} />
+          </button>
+          <button onClick={() => onNavigate("products")} style={btnStyle("outline")}>
+            View All {products.length} Products <ArrowRight size={16} style={{ marginLeft: 8, display: "inline-block", verticalAlign: "middle" }} />
+          </button>
+        </div>
+        <div className="idx-style-53">
+          {[
+            [`${products.length}+`, "Products"],
+            ["50%", "Max Discount"],
+            ["2025", "Price List"],
+            ["Licensed", "& Certified"],
+          ].map(([n, l]) => (
+            <div key={l} className="idx-style-54">
+              <div className="idx-style-55">{n}</div>
+              <div className="idx-style-56">{l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* CONNECT WITH US */}
       <section key="social-connect" className="social-connect-root" style={sectionStyle}>

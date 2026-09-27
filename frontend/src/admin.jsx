@@ -1,4 +1,5 @@
 import "./admin.css";
+import "./admin-mobile.css";
 import React, { useState, useEffect } from "react";
 import { LogOut, Menu } from "lucide-react";
 import { API_BASE } from "./utils/adminConstants";
