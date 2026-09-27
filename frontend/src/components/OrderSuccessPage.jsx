@@ -27,13 +27,13 @@ export default function OrderSuccessPage({ orderId, onNavigate, lastOrder }) {
     waText += `\n`;
 
     const subtotal = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + item.price * item.qty, 0) : (order.total || 0);
-    const delivery = subtotal >= 999 ? 0 : 99;
 
     waText += `*Subtotal:* ₹${subtotal.toLocaleString("en-IN")}\n`;
-    waText += `*Delivery Charge:* ${delivery === 0 ? "FREE" : `₹${delivery}`}\n`;
     waText += `*Total Amount:* ₹${order.total?.toLocaleString("en-IN")}\n\n`;
 
     waText += `💳 *Payment Method:* ${order.method === "cod" ? "Cash on Delivery" : "GPay / Online Payment"}\n\n`;
+
+    waText += `Delivery charges may vary based on location and distance. Final charges will be confirmed via WhatsApp.\n`;
     waText += `Hi! I have placed an order on your website. Please confirm delivery charge and receipt.`;
   } else {
     waText += `Order ID: ${orderId}\n`;
