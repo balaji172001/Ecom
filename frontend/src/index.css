@@ -6,6 +6,7 @@
   box-sizing: border-box;
   font-family: 'Plus Jakarta Sans', Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
  
 html, body {
