@@ -1,23 +1,41 @@
 {
+  "id": "/",
   "short_name": "Ram Balaji Shop",
   "name": "Ram Balaji Shop - Sri Ram Balaji Agency",
+  "description": "Buy premium Sivakasi crackers online from Ram Balaji Shop (Sri Ram Balaji Agency), Srivilliputtur. Best price list 2025 – upto 50% discount on sparklers, rockets, & garlands.",
   "icons": [
     {
-      "src": "RamBalajiShop-AppIcon.png",
-      "sizes": "192x192 512x512",
+      "src": "/RamBalajiShop-AppIcon.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "RamBalajiShop-Favicon.png",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "/RamBalajiShop-AppIcon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/RamBalajiShop-AppIcon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/RamBalajiShop-Favicon.png",
+      "sizes": "64x64",
       "type": "image/png"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#0d0400",
   "background_color": "#0d0400",
-  "orientation": "portrait",
-  "description": "Buy premium Sivakasi crackers online from Ram Balaji Shop (Sri Ram Balaji Agency), Srivilliputtur. Best price list 2025."
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["shopping", "lifestyle"],
+  "prefer_related_applications": false
 }
