@@ -28,8 +28,7 @@ export default function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const delivery = subtotal >= 999 ? 0 : 99;
-  const total = subtotal + delivery;
+  const total = subtotal;
 
   useEffect(() => {
     if (user?.address && !form.address) {
