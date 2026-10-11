@@ -6,9 +6,8 @@ export default function CartPage({ cart, onUpdate, onRemove, onNavigate }) {
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState("");
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const delivery = subtotal >= 999 ? 0 : 99;
   const discAmt = Math.round((subtotal * discount) / 100);
-  const total = subtotal + delivery - discAmt;
+  const total = subtotal - discAmt;
 
   const applyCoupon = async () => {
     if (!coupon.trim()) return;
@@ -138,14 +137,15 @@ export default function CartPage({ cart, onUpdate, onRemove, onNavigate }) {
           )}
           {[
             ["Subtotal", `₹${subtotal.toLocaleString("en-IN")}`],
-            ["Delivery", delivery === 0 ? "FREE 🎉" : `₹${delivery}`],
+            ["Delivery", "Based on KM (via WhatsApp)"],
             ...(discount ? [["Discount", `-₹${discAmt.toLocaleString("en-IN")}`]] : []),
           ].map(([k, v]) => (
             <div key={k} className="idx-style-158">
               <span>{k}</span>
               <span
                 style={{
-                  color: k === "Discount" ? "#4CAF50" : "#ccc",
+                  color: k === "Discount" ? "#4CAF50" : k === "Delivery" ? "#FFD700" : "#ccc",
+                  fontSize: k === "Delivery" ? "0.78rem" : undefined,
                 }}
               >
                 {v}
@@ -153,12 +153,12 @@ export default function CartPage({ cart, onUpdate, onRemove, onNavigate }) {
             </div>
           ))}
           <div className="idx-style-159">
-            <span>Total</span>
+            <span>Total (Items)</span>
             <span>₹{total.toLocaleString("en-IN")}</span>
           </div>
-          {delivery > 0 && (
-            <div className="idx-style-160">Add ₹{999 - subtotal} more for free delivery!</div>
-          )}
+          <div className="idx-style-160" style={{ fontSize: "0.76rem", color: "#FFD700" }}>
+            🚚 Delivery fee based on distance (KM) — sent on WhatsApp receipt
+          </div>
           <button
             onClick={() => onNavigate("checkout")}
             style={{

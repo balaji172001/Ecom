@@ -53,8 +53,8 @@ export default function HomePage({ products = [], banners = [], onNavigate, onAd
         <div className="idx-style-53">
           {[
             [`${products.length}+`, "Products"],
-            ["50%", "Max Discount"],
-            ["2025", "Price List"],
+            ["80%", "Max Discount"],
+            ["2026", "Price List"],
             ["Licensed", "& Certified"],
           ].map(([n, l]) => (
             <div key={l} className="idx-style-54">
