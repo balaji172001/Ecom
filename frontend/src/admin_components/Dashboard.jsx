@@ -245,7 +245,7 @@ export default function Dashboard({ products, orders, refreshData, lastUpdated, 
                       <button
                         onClick={() =>
                           window.open(
-                            `https://wa.me/91${vip.mobile}?text=Hi ${vip.name.split(" ")[0]}, as a VIP customer of Sri Ram Balaji, we have a special discount for you! Check out our new 2025 Price List.`,
+                            `https://wa.me/91${vip.mobile}?text=Hi ${vip.name.split(" ")[0]}, as a VIP customer of Sri Ram Balaji, we have a special discount for you! Check out our new 2026 Price List.`,
                             "_blank"
                           )
                         }

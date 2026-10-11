@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from "react";
 import {
   Phone, Sparkles, ArrowRight, Smartphone, Camera, Play,
-  CheckCircle, AlertTriangle, User, Flame, Info, Tag, Home, X, MessageSquare, Star ,Gift
+  CheckCircle, AlertTriangle, User, Flame, Info, Tag, Home, X, MessageSquare, Star, Gift
 } from "lucide-react";
-import { REVIEWS, COMBOS, cardStyle, sectionStyle, btnStyle } from "../utils/constants";
+import { REVIEWS, COMBOS, cardStyle, sectionStyle, btnStyle, API_BASE } from "../utils/constants";
 import BannerCarousel from "./BannerCarousel";
 import SectionTitle from "./SectionTitle";
 import ProductCard from "./ProductCard";
 
 export default function HomePage({ products = [], banners = [], onNavigate, onAddToCart }) {
   const [rev, setRev] = useState(0);
+  const [combosList, setCombosList] = useState(COMBOS);
   const featured = products.filter((p) => p.stock > 0).slice(0, 8);
 
   useEffect(() => {
     const t = setInterval(() => setRev((r) => (r + 1) % REVIEWS.length), 3800);
     return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/combos`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCombosList(data);
+        }
+      })
+      .catch((err) => console.log("Using default combos", err));
   }, []);
 
   return (
@@ -30,7 +42,7 @@ export default function HomePage({ products = [], banners = [], onNavigate, onAd
           <br />
           Agency
         </h1>
-        <p className="idx-style-48">Premium Quality Fireworks • Price List 2025</p>
+        <p className="idx-style-48">Premium Quality Fireworks • Price List 2026</p>
         <p className="idx-style-49">
           329-H/1, Srivilliputtur to Alangulam Road, Sri Venkateswara Nagar
           <br />
@@ -40,7 +52,7 @@ export default function HomePage({ products = [], banners = [], onNavigate, onAd
           <Phone size={16} /> 99407 67763 &nbsp;|&nbsp; 99409 19857
         </p>
         <div className="idx-style-51" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Sparkles size={16} /> Special Offer — Discount UPTO 50% OFF on all products!
+          <Sparkles size={16} /> Special Offer — Discount UPTO 80% OFF on all products!
         </div>
         <div className="idx-style-52">
           <button onClick={() => onNavigate("products")} style={btnStyle("primary")}>
@@ -86,60 +98,81 @@ export default function HomePage({ products = [], banners = [], onNavigate, onAd
       <section style={sectionStyle}>
         <SectionTitle icon={<Gift size={32} />} title="Combo Offers" sub="Best value bundles for your celebration" />
         <div className="idx-style-59">
-          {COMBOS.map((c) => {
-            const d = Math.round((1 - c.price / c.mrp) * 100);
+          {combosList.map((c) => {
+            const d = c.mrp && c.price && c.mrp > c.price ? Math.round(((c.mrp - c.price) / c.mrp) * 100) : 80;
             return (
               <div
-                key={c.name}
+                key={c.name || c._id}
                 style={{
                   ...cardStyle,
                   background: "linear-gradient(135deg,rgba(30,10,0,0.94),rgba(60,20,0,0.9))",
                   border: "1px solid rgba(255,215,0,0.28)",
                   overflow: "hidden",
                   position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
               >
-                <div
-                  style={{
-                    position: "absolute",
-                    top: -10,
-                    right: -10,
-                    fontSize: "5rem",
-                    opacity: 0.08,
-                    color: "#FFD700",
-                  }}
-                >
-                  {c.icon}
+                <div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -10,
+                      right: -10,
+                      fontSize: "5rem",
+                      opacity: 0.08,
+                      color: "#FFD700",
+                    }}
+                  >
+                    {c.icon || "🎁"}
+                  </div>
+                  <div className="idx-style-60">{c.icon || "🎁"}</div>
+                  <h3 className="idx-style-61">{c.name}</h3>
+                  <div className="idx-style-62">
+                    <span className="idx-style-63">₹{c.price}</span>
+                    {c.mrp > c.price && <span className="idx-style-64">₹{c.mrp}</span>}
+                    {d > 0 && <span className="idx-style-65">{d}% OFF</span>}
+                  </div>
+                  <ul className="idx-style-66">
+                    {c.items && c.items.map((i) => (
+                      <li key={i} className="idx-style-67" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <CheckCircle size={14} color="#4CAF50" /> {i}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="idx-style-60">{c.icon}</div>
-                <h3 className="idx-style-61">{c.name}</h3>
-                <div className="idx-style-62">
-                  <span className="idx-style-63">₹{c.price}</span>
-                  <span className="idx-style-64">₹{c.mrp}</span>
-                  <span className="idx-style-65">{d}% OFF</span>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
+                  <button
+                    onClick={() => {
+                      onAddToCart({
+                        id: `combo_${c._id || c.name.replace(/\s+/g, '_')}_${Date.now()}`,
+                        name: `${c.name} Combo`,
+                        price: c.price,
+                        mrp: c.mrp || c.price * 2,
+                        isCombo: true,
+                        comboDetails: c,
+                        customItems: c.items || [],
+                        qty: 1,
+                        image: typeof c.icon === "string" ? c.icon : "🎁",
+                        category: "Combo Offer",
+                      });
+                    }}
+                    style={{
+                      ...btnStyle("primary"),
+                      width: "100%",
+                      padding: "9px",
+                      fontSize: "0.82rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                  >
+                    Order Combo (₹{c.price}) <ArrowRight size={15} />
+                  </button>
                 </div>
-                <ul className="idx-style-66">
-                  {c.items.map((i) => (
-                    <li key={i} className="idx-style-67" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <CheckCircle size={14} color="#4CAF50" /> {i}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => onNavigate("products")}
-                  style={{
-                    ...btnStyle("primary"),
-                    width: "100%",
-                    padding: "9px",
-                    fontSize: "0.8rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                >
-                  Order Now <ArrowRight size={16} />
-                </button>
               </div>
             );
           })}
@@ -148,7 +181,7 @@ export default function HomePage({ products = [], banners = [], onNavigate, onAd
 
       {/* FEATURED PRODUCTS */}
       <section style={sectionStyle}>
-        <SectionTitle icon={<Star size={32} color="#FFD700" />} title="Featured Products" sub="Best sellers from Price List 2025" />
+        <SectionTitle icon={<Star size={32} color="#FFD700" />} title="Featured Products" sub="Best sellers from Price List 2026" />
         <div className="idx-style-68">
           {featured.map((p) => (
             <ProductCard key={p.id} p={p} onAddToCart={onAddToCart} onNavigate={onNavigate} />

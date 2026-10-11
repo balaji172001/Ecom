@@ -9,7 +9,7 @@ export default function Walkthrough() {
     {
       icon: <Flame size={48} color="#FFD700" />,
       title: "Welcome to Sri Ram Balaji!",
-      text: "Premium Quality Fireworks for your grand celebrations. Explore our Price List 2025!"
+      text: "Premium Quality Fireworks for your grand celebrations. Explore our Price List 2026!"
     },
     {
       icon: <ShoppingBag size={48} color="#FFD700" />,

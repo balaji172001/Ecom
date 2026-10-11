@@ -13,6 +13,9 @@ import AdminProductsPage from "./admin_components/AdminProductsPage";
 import AdminCouponsPage from "./admin_components/AdminCouponsPage";
 import AdminBannersPage from "./admin_components/AdminBannersPage";
 import AdminUsersPage from "./admin_components/AdminUsersPage";
+import AdminCategoriesPage from "./admin_components/AdminCategoriesPage";
+import AdminCombosPage from "./admin_components/AdminCombosPage";
+import { COMBOS } from "./utils/constants";
 
 export default function AdminApp() {
   const [auth, setAuth] = useState(false);
@@ -26,6 +29,15 @@ export default function AdminApp() {
   const [coupons, setCoupons] = useState([]);
   const [banners, setBanners] = useState([]);
   const [users, setUsers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [combos, setCombos] = useState(() =>
+    COMBOS.map((c, i) => ({
+      ...c,
+      id: `combo_${i}`,
+      _id: `combo_${i}`,
+      icon: typeof c.icon === "string" ? c.icon : (i === 0 ? "✨" : i === 1 ? "🎁" : "🎉"),
+    }))
+  );
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
@@ -63,10 +75,12 @@ export default function AdminApp() {
       const prodRes = await fetch(`${API_BASE}/api/products?limit=500`);
 
       // 4. Misc Admin Data
-      const [userRes, cupRes, banRes] = await Promise.all([
+      const [userRes, cupRes, banRes, catRes, comRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_BASE}/api/admin/coupons`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_BASE}/api/banners`),
+        fetch(`${API_BASE}/api/admin/categories`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/admin/combos`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       if (dashRes.ok && allOrdersRes.ok && prodRes.ok) {
@@ -81,6 +95,16 @@ export default function AdminApp() {
         if (userRes.ok) setUsers(await userRes.json());
         if (cupRes.ok) setCoupons(await cupRes.json());
         if (banRes.ok) setBanners(await banRes.json());
+        if (catRes.ok) {
+          const cData = await catRes.json();
+          setCategories(cData.map((c) => ({ ...c, id: c._id || c.id })));
+        }
+        if (comRes.ok) {
+          const comData = await comRes.json();
+          if (Array.isArray(comData) && comData.length > 0) {
+            setCombos(comData.map((c) => ({ ...c, id: c._id || c.id })));
+          }
+        }
 
         setLastUpdated(new Date());
         setAuth(true);
@@ -193,7 +217,9 @@ export default function AdminApp() {
             />
           )}
           {page === "orders" && <AdminOrdersPage orders={orders} setOrders={setOrders} />}
-          {page === "products" && <AdminProductsPage products={products} setProducts={setProducts} />}
+          {page === "products" && <AdminProductsPage products={products} setProducts={setProducts} categories={categories} setCategories={setCategories} />}
+          {page === "categories" && <AdminCategoriesPage categories={categories} setCategories={setCategories} products={products} setProducts={setProducts} />}
+          {page === "combos" && <AdminCombosPage combos={combos} setCombos={setCombos} products={products} />}
           {page === "coupons" && <AdminCouponsPage coupons={coupons} setCoupons={setCoupons} />}
           {page === "banners" && <AdminBannersPage banners={banners} setBanners={setBanners} />}
           {page === "users" && <AdminUsersPage users={users} />}

@@ -7,6 +7,8 @@ import {
   Image as ImageIcon,
   Users,
   Menu,
+  Layers,
+  Gift,
 } from "lucide-react";
 
 export default function Sidebar({ active, onNav, collapsed, onToggle, isMobile }) {
@@ -14,6 +16,8 @@ export default function Sidebar({ active, onNav, collapsed, onToggle, isMobile }
     ["dashboard", <LayoutDashboard size={18} />, "Dashboard"],
     ["orders", <Package size={18} />, "Orders"],
     ["products", <ShoppingBag size={18} />, "Products"],
+    ["categories", <Layers size={18} />, "Categories"],
+    ["combos", <Gift size={18} />, "Combo Offers"],
     ["coupons", <Tag size={18} />, "Coupons"],
     ["banners", <ImageIcon size={18} />, "Banners"],
     ["users", <Users size={18} />, "Users"],

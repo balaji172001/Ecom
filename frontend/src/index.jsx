@@ -145,7 +145,7 @@ export default function ShopApp() {
     setLastOrder(orderData);
     try {
       localStorage.setItem("srt_last_order", JSON.stringify(orderData));
-    } catch (e) {}
+    } catch (e) { }
     try {
       const res = await fetch(`${API_BASE}/api/orders/cod`, {
         method: "POST",
@@ -243,7 +243,7 @@ export default function ShopApp() {
               <div className="idx-style-262">Why Choose Us</div>
               {[
                 { icon: <ShieldCheck size={16} />, label: "Licensed & Certified Products" },
-                { icon: <Tag size={16} />, label: "Upto 50% Discount" },
+                { icon: <Tag size={16} />, label: "Upto 80% Discount" },
                 { icon: <Send size={16} />, label: "Pan-India Delivery" },
                 { icon: <Lock size={16} />, label: "Secure Payments" },
                 { icon: <Package size={16} />, label: "Safe Packaging" },

@@ -59,21 +59,21 @@ export const COMBOS = [
   {
     name: "Starter Pack",
     price: 499,
-    mrp: 999,
+    mrp: 2495,
     items: ["10 Cm Red Sparklers", "Ground Chakkar Big", "Flower Pots Small", "Red Bijili"],
     icon: <Sparkles size={24} />
   },
   {
     name: "Family Celebration",
     price: 1299,
-    mrp: 2599,
+    mrp: 6495,
     items: ["30 Cm Red Sparklers", "Flower Pots Deluxe", "1000 Wala Garland", "King of King Bomb", "Peacock Fountain"],
     icon: <Gift size={24} />
   },
   {
     name: "Grand Festival Box",
     price: 2999,
-    mrp: 5999,
+    mrp: 14995,
     items: ["120 Shot Function Box", "5000 Wala Garland", "Flower Pots Ashoka", "Tri Colour", "Thor Fountain", '3½" Fancy Aerial'],
     icon: <PartyPopper size={24} />
   }

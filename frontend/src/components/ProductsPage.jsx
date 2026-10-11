@@ -1,14 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import { CATEGORIES, inputStyle, btnStyle } from "../utils/constants";
+import { CATEGORIES, API_BASE, inputStyle, btnStyle } from "../utils/constants";
 import ProductCard from "./ProductCard";
 
 export default function ProductsPage({ onAddToCart, onNavigate, products }) {
   const [cat, setCat] = useState("All");
+  const [categoriesList, setCategoriesList] = useState(CATEGORIES);
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const PER = 12;
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/categories`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const names = ["All", ...data.map((c) => (typeof c === "string" ? c : c.name)).filter(Boolean)];
+          // Merge with any distinct categories in products
+          const prodCats = products.map((p) => p.category).filter(Boolean);
+          const merged = Array.from(new Set([...names, ...prodCats]));
+          setCategoriesList(merged);
+        }
+      })
+      .catch((err) => console.log("Using default categories", err));
+  }, [products]);
 
   let filtered = products.filter((p) => {
     if (cat !== "All" && p.category !== cat) return false;
@@ -33,7 +49,7 @@ export default function ProductsPage({ onAddToCart, onNavigate, products }) {
         <div>
           <div className="idx-style-83">Sri Ram Balaji Agency • Srivilliputtur</div>
           <h1 className="idx-style-84">All Products</h1>
-          <p className="idx-style-85">Price List 2025 — Upto 50% discount</p>
+          <p className="idx-style-85">Price List 2026 — Upto 80% discount</p>
         </div>
       </div>
 
@@ -69,7 +85,7 @@ export default function ProductsPage({ onAddToCart, onNavigate, products }) {
 
       {/* Category chips */}
       <div className="idx-style-91">
-        {CATEGORIES.map((c) => {
+        {categoriesList.map((c) => {
           const count = c === "All" ? products.length : products.filter((p) => p.category === c).length;
           return (
             <button

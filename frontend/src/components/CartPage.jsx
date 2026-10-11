@@ -67,16 +67,40 @@ export default function CartPage({ cart, onUpdate, onRemove, onNavigate }) {
                 }}
               >
                 <div className="idx-style-142">{renderImage(item.image, "idx-style-142-img")}</div>
-                <div className="idx-style-143">
+                <div className="idx-style-143" style={{ flex: 1, minWidth: 200 }}>
                   <div className="idx-style-144">
-                    {item.category} • {item.unit}
+                    {item.isCombo ? "🎁 Combo Pack" : `${item.category || "Crackers"}${item.unit ? ` • ${item.unit}` : ""}`}
                   </div>
                   <div className="idx-style-145">{item.name}</div>
                   <div className="idx-style-146">
                     <span className="idx-style-147">₹{item.price}</span>
-                    <span className="idx-style-148">₹{item.mrp}</span>
-                    <span className="idx-style-149">{d}% OFF</span>
+                    {item.mrp > item.price && <span className="idx-style-148">₹{item.mrp}</span>}
+                    {d > 0 && <span className="idx-style-149">{d}% OFF</span>}
                   </div>
+                  {item.customItems && item.customItems.length > 0 && (
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ color: "#FFD700", fontWeight: 600, fontSize: "0.72rem", marginBottom: 3 }}>
+                        Included Items ({item.customItems.length}):
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                        {item.customItems.map((ci, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              background: "rgba(255,215,0,0.1)",
+                              border: "1px solid rgba(255,215,0,0.25)",
+                              color: "#eee",
+                              borderRadius: 4,
+                              padding: "1px 6px",
+                              fontSize: "0.7rem",
+                            }}
+                          >
+                            ✓ {ci}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="idx-style-150">
                   <button onClick={() => onUpdate(item.id, item.qty - 1)} style={qtyBtn}>

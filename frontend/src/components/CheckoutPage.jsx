@@ -367,7 +367,12 @@ export default function CheckoutPage({ cart, onPlaceOrder, onNavigate, user }) {
                   <div className="idx-style-188" style={{ fontSize: "0.85rem", color: "#fff" }}>
                     {i.name}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#666" }}>
+                  {i.customItems && i.customItems.length > 0 && (
+                    <div style={{ fontSize: "0.7rem", color: "#FFD700" }}>
+                      ({i.customItems.length} items bundled)
+                    </div>
+                  )}
+                  <div style={{ fontSize: "0.75rem", color: "#888" }}>
                     ₹{i.price.toLocaleString("en-IN")} × {i.qty}
                   </div>
                 </div>

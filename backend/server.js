@@ -160,6 +160,9 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/sivakasic
 }).then(() => {
   console.log("✅ MongoDB connected with high-concurrency pool (maxPoolSize: 100)");
   isReady = true;
+  if (typeof seedInitialData === "function") {
+    seedInitialData();
+  }
 }).catch(err => {
   console.error("❌ MongoDB connection error:", err);
   // We keep isReady false if DB fails, so health checks reflect unreadiness
@@ -253,6 +256,101 @@ const bannerSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 const Banner = mongoose.model("Banner", bannerSchema);
+
+// Category Schema
+const categorySchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true, trim: true },
+  description: { type: String, trim: true },
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+});
+const Category = mongoose.model("Category", categorySchema);
+
+// Combo Schema
+const comboSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  price: { type: Number, required: true },
+  mrp: { type: Number, required: true },
+  items: [{ type: String, trim: true }],
+  description: { type: String, trim: true },
+  icon: { type: String, default: "🎁" },
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+});
+const Combo = mongoose.model("Combo", comboSchema);
+
+// Auto-seed Categories and Combos
+const seedInitialData = async () => {
+  try {
+    const catCount = await Category.countDocuments();
+    if (catCount === 0) {
+      const defaultCategories = [
+        "Flash Light Crackers",
+        "Deluxe Crackers",
+        "Garalands",
+        "Bijili Crackers",
+        "Ground Chakkar",
+        "Ground Chakkars",
+        "Flower Pots",
+        "Multi Colour Flower Pots",
+        "Twinkling Star",
+        "Bombs",
+        "Candles",
+        "Novelties",
+        "Rockets",
+        "Special Fountains",
+        "Sparkless",
+        "Sparklers",
+        "Fancy Items",
+        "Fountain",
+        "Aerial Fancy",
+        "Repeating Multi Colour Function Shots"
+      ];
+      const existingProductCats = await Product.distinct("category");
+      const allUniqueCats = [...new Set([...defaultCategories, ...existingProductCats.filter(Boolean)])];
+      const catDocs = allUniqueCats.map((name) => ({ name }));
+      await Category.insertMany(catDocs, { ordered: false }).catch(() => {});
+      console.log(`✅ Seeded ${allUniqueCats.length} categories`);
+    }
+
+    const comboCount = await Combo.countDocuments();
+    if (comboCount === 0) {
+      const defaultCombos = [
+        {
+          name: "Starter Pack",
+          price: 499,
+          mrp: 2495,
+          items: ["10 Cm Red Sparklers", "Ground Chakkar Big", "Flower Pots Small", "Red Bijili"],
+          description: "Perfect introductory cracker combo for family and kids",
+          icon: "✨",
+        },
+        {
+          name: "Family Celebration",
+          price: 1299,
+          mrp: 6495,
+          items: ["30 Cm Red Sparklers", "Flower Pots Deluxe", "1000 Wala Garland", "King of King Bomb", "Peacock Fountain"],
+          description: "Our most popular Diwali value pack with high-energy crackers",
+          icon: "🎁",
+        },
+        {
+          name: "Grand Festival Box",
+          price: 2999,
+          mrp: 14995,
+          items: ["120 Shot Function Box", "5000 Wala Garland", "Flower Pots Ashoka", "Tri Colour", "Thor Fountain", '3½" Fancy Aerial'],
+          description: "Massive celebration mega box featuring multi-color sky shots and big garlands",
+          icon: "🎉",
+        },
+      ];
+      await Combo.insertMany(defaultCombos);
+      console.log("✅ Seeded 3 default combo offers");
+    }
+  } catch (err) {
+    console.warn("⚠️ Data seeding warning:", err.message);
+  }
+};
+if (isReady) {
+  seedInitialData();
+}
 
 // ============================================================
 // RAZORPAY SETUP (guarded)
@@ -818,6 +916,170 @@ app.delete("/api/admin/banners/:id", adminAuth, async (req, res) => {
   await Banner.findByIdAndDelete(req.params.id);
   clearCache();
   res.json({ success: true });
+});
+
+// ============================================================
+// CATEGORY ROUTES
+// ============================================================
+app.get("/api/categories", cacheMiddleware(10), async (req, res) => {
+  try {
+    const categories = await Category.find({ isActive: true }).sort({ name: 1 });
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
+app.get("/api/admin/categories", adminAuth, async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ name: 1 });
+    const counts = await Product.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+    const countMap = counts.reduce((acc, c) => {
+      if (c._id) acc[c._id] = c.count;
+      return acc;
+    }, {});
+    const result = categories.map((cat) => ({
+      _id: cat._id,
+      id: cat._id,
+      name: cat.name,
+      description: cat.description || "",
+      isActive: cat.isActive,
+      productCount: countMap[cat.name] || 0,
+      createdAt: cat.createdAt,
+    }));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch admin categories" });
+  }
+});
+
+app.post("/api/admin/categories", adminAuth, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Category name is required" });
+    }
+    const trimmed = name.trim();
+    const existing = await Category.findOne({ name: { $regex: new RegExp(`^${trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, "i") } });
+    if (existing) {
+      return res.status(400).json({ error: "Category already exists", category: existing });
+    }
+    const category = await Category.create({ name: trimmed, description: description?.trim() });
+    clearCache();
+    res.json(category);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to create category" });
+  }
+});
+
+app.put("/api/admin/categories/:id", adminAuth, async (req, res) => {
+  try {
+    const { name, description, isActive } = req.body;
+    const cat = await Category.findById(req.params.id);
+    if (!cat) return res.status(404).json({ error: "Category not found" });
+
+    const oldName = cat.name;
+    const newName = name ? name.trim() : oldName;
+
+    cat.name = newName;
+    if (description !== undefined) cat.description = description;
+    if (isActive !== undefined) cat.isActive = isActive;
+    await cat.save();
+
+    // If renamed, automatically update all products with old category name!
+    if (oldName !== newName) {
+      await Product.updateMany({ category: oldName }, { category: newName });
+    }
+
+    clearCache();
+    res.json(cat);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to update category" });
+  }
+});
+
+app.delete("/api/admin/categories/:id", adminAuth, async (req, res) => {
+  try {
+    const cat = await Category.findById(req.params.id);
+    if (!cat) return res.status(404).json({ error: "Category not found" });
+    await Category.findByIdAndDelete(req.params.id);
+    clearCache();
+    res.json({ success: true, message: `Category '${cat.name}' deleted` });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to delete category" });
+  }
+});
+
+// ============================================================
+// COMBO ROUTES
+// ============================================================
+app.get("/api/combos", cacheMiddleware(10), async (req, res) => {
+  try {
+    const combos = await Combo.find({ isActive: true }).sort({ price: 1 });
+    res.json(combos);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch combos" });
+  }
+});
+
+app.get("/api/admin/combos", adminAuth, async (req, res) => {
+  try {
+    const combos = await Combo.find().sort({ createdAt: -1 });
+    res.json(combos);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch admin combos" });
+  }
+});
+
+app.post("/api/admin/combos", adminAuth, async (req, res) => {
+  try {
+    const { name, price, mrp, items, description, icon } = req.body;
+    if (!name || price === undefined) {
+      return res.status(400).json({ error: "Name and Price/Amount are required" });
+    }
+    const combo = await Combo.create({
+      name: name.trim(),
+      price: Number(price),
+      mrp: Number(mrp) || Number(price),
+      items: Array.isArray(items) ? items.filter(Boolean) : [],
+      description: description || "",
+      icon: icon || "🎁",
+      isActive: true,
+    });
+    clearCache();
+    res.json(combo);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to create combo" });
+  }
+});
+
+app.put("/api/admin/combos/:id", adminAuth, async (req, res) => {
+  try {
+    const updates = { ...req.body };
+    if (updates.price !== undefined) updates.price = Number(updates.price);
+    if (updates.mrp !== undefined) updates.mrp = Number(updates.mrp);
+    if (updates.items && Array.isArray(updates.items)) {
+      updates.items = updates.items.filter(Boolean);
+    }
+    const combo = await Combo.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!combo) return res.status(404).json({ error: "Combo not found" });
+    clearCache();
+    res.json(combo);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to update combo" });
+  }
+});
+
+app.delete("/api/admin/combos/:id", adminAuth, async (req, res) => {
+  try {
+    await Combo.findByIdAndDelete(req.params.id);
+    clearCache();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to delete combo" });
+  }
 });
 
 // ============================================================
